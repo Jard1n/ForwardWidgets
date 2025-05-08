@@ -1,0 +1,34 @@
+{
+  "title": "𝑱𝒂𝒓𝒅1𝒏'𝒔 𝑾𝒊𝒅𝒈𝒆𝒕𝒔",
+  "description": "Forward Widgets",
+  "icon": "https://github.com/Jard1n/ForwardWidgets/raw/main/icon.png",
+  "widgets": [
+    {
+      "id": "douban",
+      "title": "豆瓣",
+      "description": "解析豆瓣片单，获取视频信息",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.0",
+      "author": "pack1r",
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/douban.js"
+    },
+    {
+      "id": "douban",
+      "title": "豆瓣我看&豆瓣个性化推荐",
+      "description": "解析豆瓣想看、在看、已看以及根据个人数据生成的个性化推荐",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.2",
+      "author": "huangxd",
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/db.js"
+    },
+    {
+      "id": "imdb",
+      "title": "IMDB",
+      "description": "IMDB",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.0",
+      "author": "pack1r",
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/imdb.js"
+    }
+  ]
+}
