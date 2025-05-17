@@ -1,8 +1,8 @@
 // 引用地址：https://raw.githubusercontent.com/quantumultxx/FW-Widgets/refs/heads/main/Widgets/jable.js
 WidgetMetadata = {
   id: "jable",
-  title: "Jable",
-  description: "获取Jable各种分类榜单",
+  title: "Jable详细分类",
+  description: "获取Jable分类榜单",
   author: "nibiru",
   site: "https://github.com/quantumultxx/FW-Widgets",
   version: "1.0.2",
@@ -110,10 +110,6 @@ WidgetMetadata = {
           type: "enumeration",
           enumOptions: [
             { 
-              title: "暂时就这些吧，其余有空再加", 
-              value: ""
-            },
-            { 
               title: "三上悠亚", 
               value: "https://jable.tv/s1/models/yua-mikami/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
@@ -126,7 +122,7 @@ WidgetMetadata = {
               value: "https://jable.tv/models/2958338aa4f78c0afb071e2b8a6b5f1b/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
             { 
-              title: "大槻ひびき", 
+              title: "大槻响", 
               value: "https://jable.tv/models/hibiki-otsuki/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
             { 
@@ -138,23 +134,55 @@ WidgetMetadata = {
               value: "https://jable.tv/models/julia/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
             { 
-              title: "明里つむぎ", 
+              title: "明里䌷", 
               value: "https://jable.tv/models/tsumugi-akari/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
             { 
-              title: "桃乃木かな", 
+              title: "桃乃木香奈", 
               value: "https://jable.tv/models/momonogi-kana/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
             { 
-              title: "水戸かな", 
+              title: "水户香奈", 
               value: "https://jable.tv/models/kana-mito/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
             { 
               title: "篠田ゆう", 
               value: "https://jable.tv/s1/models/shinoda-yuu/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
+            { 
+              title: "枫可怜", 
+              value: "https://jable.tv/models/kaede-karen/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
+            { 
+              title: "吉沢明歩", 
+              value: "https://jable.tv/models/akiho-yoshizawa/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
+            { 
+              title: "羽月希", 
+              value: "https://jable.tv/models/21e145d3f4d7c8c818fc7eae19342a7a/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
+            { 
+              title: "美谷朱里 ", 
+              value: "https://jable.tv/s1/models/mitani-akari/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
+            { 
+              title: "山岸逢花", 
+              value: "https://jable.tv/models/yamagishi-aika/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
+            { 
+              title: "佐佐木明希", 
+              value: "https://jable.tv/models/sasaki-aki/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
+            { 
+              title: "神木麗", 
+              value: "https://jable.tv/models/ef9b1ab9a21b58d6ee4d7d97ab883288/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
+            { 
+              title: "七泽美亚", 
+              value: "https://jable.tv/models/nanasawa-mia/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
           ],
-          value: "",
+          value: "https://jable.tv/s1/models/yua-mikami/?mode=async&function=get_block&block_id=list_videos_common_videos_list",
         },
         {
           name: "sort_by",
@@ -183,10 +211,6 @@ WidgetMetadata = {
           title: "选择角色",
           type: "enumeration",
           enumOptions: [
-            { 
-              title: "选择类型", 
-              value: ""
-            },
             { 
               title: "黑丝", 
               value: "https://jable.tv/tags/black-pantyhose/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
@@ -252,7 +276,7 @@ WidgetMetadata = {
               value: "https://jable.tv/tags/Cosplay/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
           ],
-          value: "",
+          value: "https://jable.tv/tags/black-pantyhose/?mode=async&function=get_block&block_id=list_videos_common_videos_list",
         },
         {
           name: "sort_by",
@@ -281,8 +305,8 @@ WidgetMetadata = {
           type: "enumeration",
           enumOptions: [
             { 
-              title: "选择类型", 
-              value: ""
+              title: "出轨", 
+              value: "https://jable.tv/tags/affair/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
             { 
               title: "醉男", 
@@ -309,10 +333,6 @@ WidgetMetadata = {
               value: "https://jable.tv/tags/love-potion/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
             { 
-              title: "出轨", 
-              value: "https://jable.tv/tags/affair/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
-            },
-            { 
               title: "催眠", 
               value: "https://jable.tv/tags/hypnosis//?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
@@ -337,7 +357,7 @@ WidgetMetadata = {
               value: "https://jable.tv/tags/time-stop/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
           ],
-          value: "",
+          value: "https://jable.tv/tags/affair/?mode=async&function=get_block&block_id=list_videos_common_videos_list",
         },
         {
           name: "sort_by",
@@ -366,10 +386,6 @@ WidgetMetadata = {
           title: "选择角色",
           type: "enumeration",
           enumOptions: [
-            { 
-              title: "选择类型", 
-              value: ""
-            },
             { 
               title: "电车", 
               value: "https://jable.tv/tags/tram/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
@@ -423,7 +439,7 @@ WidgetMetadata = {
               value: "https://jable.tv/tags/store/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
           ],
-          value: "",
+          value: "https://jable.tv/tags/tram/?mode=async&function=get_block&block_id=list_videos_common_videos_list",
         },
         {
           name: "sort_by",
@@ -451,10 +467,6 @@ WidgetMetadata = {
           title: "选择角色",
           type: "enumeration",
           enumOptions: [
-            { 
-              title: "选择类型", 
-              value: ""
-            },
             { 
               title: "长身", 
               value: "https://jable.tv/tags/tall/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
@@ -504,7 +516,7 @@ WidgetMetadata = {
               value: "https://jable.tv/tags/dainty/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
           ],
-          value: "",
+          value: "https://jable.tv/tags/tall/?mode=async&function=get_block&block_id=list_videos_common_videos_list",
         },
         {
           name: "sort_by",
@@ -532,10 +544,6 @@ WidgetMetadata = {
           title: "选择角色",
           type: "enumeration",
           enumOptions: [
-            { 
-              title: "选择类型", 
-              value: ""
-            },
             { 
               title: "人妻", 
               value: "https://jable.tv/tags/wife/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
@@ -589,7 +597,7 @@ WidgetMetadata = {
               value: "https://jable.tv/tags/team-manager/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
           ],
-          value: "",
+          value: "https://jable.tv/tags/wife/?mode=async&function=get_block&block_id=list_videos_common_videos_list",
         },
         {
           name: "sort_by",
@@ -617,10 +625,6 @@ WidgetMetadata = {
           title: "选择主题",
           type: "enumeration",
           enumOptions: [
-            { 
-              title: "选择类型", 
-              value: ""
-            },
             { 
               title: "角色剧情", 
               value: "https://jable.tv/categories/roleplay/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
@@ -666,7 +670,7 @@ WidgetMetadata = {
               value: "https://jable.tv/categories/lesbian/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
           ],
-          value: "https://jable.tv/categories/all/?mode=async&function=get_block&block_id=list_videos_common_videos_list",
+          value: "https://jable.tv/categories/roleplay/?mode=async&function=get_block&block_id=list_videos_common_videos_list",
         },
         {
           name: "sort_by",
