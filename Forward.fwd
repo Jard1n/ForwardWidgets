@@ -12,7 +12,16 @@
       "author": "nibiru",
       "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/jable.js"
     },
-	{
+    {
+      "id": "hot_picks",
+      "title": "热门精选",
+      "description": "获取最新热播剧和热门影片推荐",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.7",
+      "author": "两块",
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/HotPicks.js"
+    },
+    {
       "id": "douban",
       "title": "豆瓣我看&豆瓣个性化推荐",
       "description": "解析豆瓣想看、在看、已看以及根据个人数据生成",
