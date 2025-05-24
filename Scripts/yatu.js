@@ -194,7 +194,7 @@ WidgetMetadata = {
             ],
         },
     ],
-    version: "1.0.2",
+    version: "1.0.3",
     requiredVersion: "0.0.1",
     description: "解析雅图每日放送更新以及各类排行榜【五折码：CHEAP.5;七折码：CHEAP】",
     author: "huangxd",
@@ -394,13 +394,15 @@ function getClickItemInfos(data, typ) {
         return null;
     }
 
-    return Array.from(
-        Widget.dom.select(tables[0], 'a[target="_blank"]')
-    ).map(a => Widget.dom.text(a).trim());
+    return [...new Set(
+        Array.from(
+            Widget.dom.select(tables[0], 'a[target="_blank"]')
+        ).map(a => Widget.dom.text(a).trim().replace(/ *第[^季]*季| *\d+~\d+季| *\d+季/, ''))
+    )];
 }
 
-async function fetchFinalItems(genre, typ, mediaTypeDict) {
-    const response = await Widget.http.get(`http://www.yatu.tv:2082/top/${genre}.htm`, {
+async function fetchFinalItems(genre, typ, mediaTypeDict, suffixDict) {
+    const response = await Widget.http.get(`http://www.yatu.tv:2082/top/${genre}.${suffixDict[genre]}`, {
         headers: {
             "User-Agent":
                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
@@ -461,7 +463,18 @@ async function loadClickItems(params = {}) {
             'tv-zy': 'tv',
         };
 
-        return await fetchFinalItems(genre, typ, mediaTypeDict);
+        const suffixDict = {
+            'dm-lz': 'htm',
+            'dm-jc': 'htm',
+            'dy': 'htm',
+            'dy-xianggan': 'html',
+            'dy-om': 'htm',
+            'tv': 'htm',
+            'tv-meiju': 'html',
+            'tv-zy': 'htm',
+        };
+
+        return await fetchFinalItems(genre, typ, mediaTypeDict, suffixDict);
     } catch (error) {
         console.error("处理失败:", error);
         throw error;
@@ -483,7 +496,13 @@ async function loadScoreItems(params = {}) {
             'p-tv': 'tv',
         };
 
-        return await fetchFinalItems(genre, typ, mediaTypeDict);
+        const suffixDict = {
+            'p-dm': 'htm',
+            'p-dy': 'htm',
+            'p-tv': 'htm',
+        };
+
+        return await fetchFinalItems(genre, typ, mediaTypeDict, suffixDict);
     } catch (error) {
         console.error("处理失败:", error);
         throw error;
