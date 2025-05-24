@@ -31,13 +31,22 @@
       "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/HotPicks.js"
     },
     {
-      "id": "forward.combined.media.lists",
-      "title": "影视榜单",
-      "description": "聚合豆瓣、TMDB、IMDB和Bangumi的电影、剧集、动画片单与榜单",
+      "id": "douban",
+      "title": "豆瓣",
+      "description": "解析豆瓣片单，获取视频信息",
       "requiredVersion": "0.0.1",
-      "version": "1.2.5",
-      "author": "阿米诺斯",
-      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/ForwardWidgets.js"
+      "version": "1.0.0",
+      "author": "pack1r",
+      "url": "https://raw.githubusercontent.com/pack1r/ForwardWidgets/refs/heads/main/widgets/douban.js"
+    },
+    {
+      "id": "tmdb",
+      "title": "TMDB",
+      "description": "TMDB榜单",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.0",
+      "author": "Jard1n",
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/tmdb.js"
     }
   ]
 }
