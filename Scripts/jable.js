@@ -5,7 +5,7 @@ WidgetMetadata = {
   description: "获取Jable分类榜单",
   author: "nibiru",
   site: "https://github.com/quantumultxx/FW-Widgets",
-  version: "1.0.2",
+  version: "1.0.3",
   requiredVersion: "0.0.1",
   modules: [
     // 热门模块
@@ -89,7 +89,7 @@ WidgetMetadata = {
           type: "enumeration",
           description: "排序",
           enumOptions: [
-            { title: "最新发布", value: "post_date" },
+            { title: "最近更新", value: "post_date" },
             { title: "最多观看", value: "video_viewed" },
             { title: "最多收藏", value: "most_favourited" },
           ],
@@ -162,7 +162,7 @@ WidgetMetadata = {
               value: "https://jable.tv/models/21e145d3f4d7c8c818fc7eae19342a7a/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
             { 
-              title: "美谷朱里 ", 
+              title: "美谷朱里", 
               value: "https://jable.tv/s1/models/mitani-akari/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
             { 
@@ -346,10 +346,6 @@ WidgetMetadata = {
               value: "https://jable.tv/models/mihara-honoka/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
             { 
-              title: "新ありな", 
-              value: "https://jable.tv/models/e763382dc86aa703456d964ca25d0e8b/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
-            },
-            { 
               title: "涼森れむ", 
               value: "https://jable.tv/models/7cadf3e484f607dc7d0f1c0e7a83b007/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
@@ -370,7 +366,7 @@ WidgetMetadata = {
           type: "enumeration",
           description: "排序",
           enumOptions: [
-            { title: "最新发布", value: "post_date" },
+            { title: "最近更新", value: "post_date" },
             { title: "最多观看", value: "video_viewed" },
             { title: "最多收藏", value: "most_favourited" },
           ],
@@ -396,24 +392,12 @@ WidgetMetadata = {
               value: "https://jable.tv/tags/black-pantyhose/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
             { 
-              title: "过膝袜", 
-              value: "https://jable.tv/tags/knee-socks/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
-            },
-            { 
-              title: "运动装", 
-              value: "https://jable.tv/tags/sportswear/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
-            },
-            { 
               title: "肉丝", 
               value: "https://jable.tv/tags/flesh-toned-pantyhose/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
             { 
               title: "丝袜", 
               value: "https://jable.tv/tags/pantyhose/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
-            },
-            { 
-              title: "眼镜娘", 
-              value: "https://jable.tv/tags/glasses/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
             { 
               title: "兽耳", 
@@ -448,13 +432,25 @@ WidgetMetadata = {
               value: "https://jable.tv/tags/kimono/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
             { 
+              title: "眼镜娘", 
+              value: "https://jable.tv/tags/glasses/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
+            { 
+              title: "过膝袜", 
+              value: "https://jable.tv/tags/knee-socks/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
+            { 
+              title: "运动装", 
+              value: "https://jable.tv/tags/sportswear/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
+            { 
               title: "兔女郎", 
               value: "https://jable.tv/tags/bunny-girl/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
             { 
               title: "Cosplay", 
               value: "https://jable.tv/tags/Cosplay/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
-            },
+            }
           ],
           value: "https://jable.tv/tags/black-pantyhose/?mode=async&function=get_block&block_id=list_videos_common_videos_list",
         },
@@ -464,7 +460,7 @@ WidgetMetadata = {
           type: "enumeration",
           description: "排序",
           enumOptions: [
-            { title: "最新发布", value: "post_date" },
+            { title: "最近更新", value: "post_date" },
             { title: "最多观看", value: "video_viewed" },
             { title: "最多收藏", value: "most_favourited" },
           ],
@@ -535,7 +531,7 @@ WidgetMetadata = {
             { 
               title: "时间停止", 
               value: "https://jable.tv/tags/time-stop/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
-            },
+            }
           ],
           value: "https://jable.tv/tags/affair/?mode=async&function=get_block&block_id=list_videos_common_videos_list",
         },
@@ -545,7 +541,7 @@ WidgetMetadata = {
           type: "enumeration",
           description: "排序",
           enumOptions: [
-            { title: "最新发布", value: "post_date" },
+            { title: "最近更新", value: "post_date" },
             { title: "最多观看", value: "video_viewed" },
             { title: "最多收藏", value: "most_favourited" },
           ],
@@ -617,7 +613,7 @@ WidgetMetadata = {
             { 
               title: "便利店", 
               value: "https://jable.tv/tags/store/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
-            },
+            }
           ],
           value: "https://jable.tv/tags/tram/?mode=async&function=get_block&block_id=list_videos_common_videos_list",
         },
@@ -627,7 +623,7 @@ WidgetMetadata = {
           type: "enumeration",
           description: "排序",
           enumOptions: [
-            { title: "最新发布", value: "post_date" },
+            { title: "最近更新", value: "post_date" },
             { title: "最多观看", value: "video_viewed" },
             { title: "最多收藏", value: "most_favourited" },
           ],
@@ -694,7 +690,7 @@ WidgetMetadata = {
             { 
               title: "娇小", 
               value: "https://jable.tv/tags/dainty/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
-            },
+            }
           ],
           value: "https://jable.tv/tags/tall/?mode=async&function=get_block&block_id=list_videos_common_videos_list",
         },
@@ -704,7 +700,7 @@ WidgetMetadata = {
           type: "enumeration",
           description: "排序",
           enumOptions: [
-            { title: "最新发布", value: "post_date" },
+            { title: "最近更新", value: "post_date" },
             { title: "最多观看", value: "video_viewed" },
             { title: "最多收藏", value: "most_favourited" },
           ],
@@ -765,10 +761,6 @@ WidgetMetadata = {
               value: "https://jable.tv/tags/housewife/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
             { 
-              title: "家庭教师", 
-              value: "https://jable.tv/tags/private-teacher/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
-            },
-            { 
               title: "搜查官", 
               value: "https://jable.tv/tags/detective/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
@@ -777,9 +769,13 @@ WidgetMetadata = {
               value: "https://jable.tv/tags/widow/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
             },
             { 
+              title: "家庭教师", 
+              value: "https://jable.tv/tags/private-teacher/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
+            { 
               title: "球队经理", 
               value: "https://jable.tv/tags/team-manager/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
-            },
+            }
           ],
           value: "https://jable.tv/tags/wife/?mode=async&function=get_block&block_id=list_videos_common_videos_list",
         },
@@ -789,7 +785,7 @@ WidgetMetadata = {
           type: "enumeration",
           description: "排序",
           enumOptions: [
-            { title: "最新发布", value: "post_date" },
+            { title: "最近更新", value: "post_date" },
             { title: "最多观看", value: "video_viewed" },
             { title: "最多收藏", value: "most_favourited" },
           ],
@@ -848,7 +844,7 @@ WidgetMetadata = {
             { 
               title: "中出", 
               value: "https://jable.tv/tags/creampie/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
-            },
+            }
           ],
           value: "https://jable.tv/tags/facial/?mode=async&function=get_block&block_id=list_videos_common_videos_list",
         },
@@ -858,7 +854,7 @@ WidgetMetadata = {
           type: "enumeration",
           description: "排序",
           enumOptions: [
-            { title: "最新发布", value: "post_date" },
+            { title: "最近更新", value: "post_date" },
             { title: "最多观看", value: "video_viewed" },
             { title: "最多收藏", value: "most_favourited" },
           ],
@@ -866,6 +862,95 @@ WidgetMetadata = {
         { name: "from", title: "页码", type: "page", description: "页码", value: "1" },
       ],
     },
+                // 玩法模块
+    {
+      title: "玩法",
+      description: "按玩法分类浏览影片",
+      requiresWebView: false,
+      functionName: "loadPage",
+      params: [
+        {
+          name: "url",
+          title: "选择玩法",
+          type: "enumeration",
+          enumOptions: [
+            { 
+              title: "露出", 
+              value: "https://jable.tv/tags/outdoor/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
+            { 
+              title: "侵犯", 
+              value: "https://jable.tv/tags/intrusion/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
+            { 
+              title: "调教", 
+              value: "https://jable.tv/tags/tune/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
+            { 
+              title: "捆绑", 
+              value: "https://jable.tv/tags/bondage/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
+            { 
+              title: "痴汉", 
+              value: "https://jable.tv/tags/chikan/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
+            { 
+              title: "痴女", 
+              value: "https://jable.tv/tags/chizyo/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
+            { 
+              title: "男M", 
+              value: "https://jable.tv/tags/masochism-guy/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
+            { 
+              title: "泥醉", 
+              value: "https://jable.tv/tags/crapulence/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
+            { 
+              title: "泡姬", 
+              value: "https://jable.tv/tags/soapland/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
+            { 
+              title: "母乳", 
+              value: "https://jable.tv/tags/breast-milk/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
+            { 
+              title: "放尿", 
+              value: "https://jable.tv/tags/piss/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
+            { 
+              title: "按摩", 
+              value: "https://jable.tv/tags/massage/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
+            { 
+              title: "多P", 
+              value: "https://jable.tv/tags/breast-milk/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
+            { 
+              title: "瞬间插入", 
+              value: "https://jable.tv/tags/quickie/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            },
+            { 
+              title: "集团侵犯", 
+              value: "https://jable.tv/tags/gang-intrusion/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
+            }
+          ],
+          value: "https://jable.tv/tags/outdoor/?mode=async&function=get_block&block_id=list_videos_common_videos_list",
+        },
+        {
+          name: "sort_by",
+          title: "排序",
+          type: "enumeration",
+          description: "排序",
+          enumOptions: [
+            { title: "最近更新", value: "post_date" },
+            { title: "最多观看", value: "video_viewed" },
+            { title: "最多收藏", value: "most_favourited" },
+          ],
+        },
+        { name: "from", title: "页码", type: "page", description: "页码", value: "1" },
+      ],
+    },    
                     // 主题模块
     {
       title: "主题",
@@ -921,7 +1006,7 @@ WidgetMetadata = {
             { 
               title: "女同欢愉", 
               value: "https://jable.tv/categories/lesbian/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
-            },
+            }
           ],
           value: "https://jable.tv/categories/roleplay/?mode=async&function=get_block&block_id=list_videos_common_videos_list",
         },
@@ -931,7 +1016,7 @@ WidgetMetadata = {
           type: "enumeration",
           description: "排序",
           enumOptions: [
-            { title: "最新发布", value: "post_date" },
+            { title: "最近更新", value: "post_date" },
             { title: "最多观看", value: "video_viewed" },
             { title: "最多收藏", value: "most_favourited" },
           ],
@@ -974,7 +1059,7 @@ WidgetMetadata = {
             { 
               title: "处女作/隐退作", 
               value: "https://jable.tv/tags/debut-retires/?mode=async&function=get_block&block_id=list_videos_common_videos_list"
-            },
+            }
           ],
           value: "https://jable.tv/tags/video-recording/?mode=async&function=get_block&block_id=list_videos_common_videos_list",
         },
@@ -984,14 +1069,14 @@ WidgetMetadata = {
           type: "enumeration",
           description: "排序",
           enumOptions: [
-            { title: "最新发布", value: "post_date" },
+            { title: "最近更新", value: "post_date" },
             { title: "最多观看", value: "video_viewed" },
             { title: "最多收藏", value: "most_favourited" },
           ],
         },
         { name: "from", title: "页码", type: "page", description: "页码", value: "1" },
       ],
-    },    
+    },
   ],
 };
 
