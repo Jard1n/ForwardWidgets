@@ -5,7 +5,7 @@ WidgetMetadata = {
   description: "获取Jable分类榜单",
   author: "nibiru",
   site: "https://github.com/quantumultxx/FW-Widgets",
-  version: "1.0.3",
+  version: "1.0.5",
   requiredVersion: "0.0.1",
   modules: [
     // 热门模块
@@ -108,6 +108,10 @@ WidgetMetadata = {
           name: "url",
           title: "选择女优",
           type: "enumeration",
+          belongTo: {
+            paramName: "sort_by",
+            value: ["post_date","video_viewed","most_favourited"],
+            },
           enumOptions: [
             { 
               title: "三上悠亚", 
@@ -386,6 +390,10 @@ WidgetMetadata = {
           name: "url",
           title: "选择衣着",
           type: "enumeration",
+          belongTo: {
+            paramName: "sort_by",
+            value: ["post_date","video_viewed","most_favourited"],
+            },
           enumOptions: [
             { 
               title: "黑丝", 
@@ -479,6 +487,10 @@ WidgetMetadata = {
           name: "url",
           title: "选择剧情",
           type: "enumeration",
+          belongTo: {
+            paramName: "sort_by",
+            value: ["post_date","video_viewed","most_favourited"],
+            },
           enumOptions: [
             { 
               title: "出轨", 
@@ -556,6 +568,10 @@ WidgetMetadata = {
       description: "按地点分类浏览影片",
       requiresWebView: false,
       functionName: "loadPage",
+      belongTo: {
+            paramName: "sort_by",
+            value: ["post_date","video_viewed","most_favourited"],
+            },
       params: [
         {
           name: "url",
@@ -637,11 +653,19 @@ WidgetMetadata = {
       description: "按身材分类浏览影片",
       requiresWebView: false,
       functionName: "loadPage",
+      belongTo: {
+            paramName: "sort_by",
+            value: ["post_date","video_viewed","most_favourited"],
+            },
       params: [
         {
           name: "url",
           title: "选择身材",
           type: "enumeration",
+          belongTo: {
+            paramName: "sort_by",
+            value: ["post_date","video_viewed","most_favourited"],
+            },
           enumOptions: [
             { 
               title: "长身", 
@@ -714,6 +738,10 @@ WidgetMetadata = {
       description: "按角色分类浏览影片",
       requiresWebView: false,
       functionName: "loadPage",
+      belongTo: {
+            paramName: "sort_by",
+            value: ["post_date","video_viewed","most_favourited"],
+            },
       params: [
         {
           name: "url",
@@ -799,6 +827,10 @@ WidgetMetadata = {
       description: "按交合分类浏览影片",
       requiresWebView: false,
       functionName: "loadPage",
+      belongTo: {
+            paramName: "sort_by",
+            value: ["post_date","video_viewed","most_favourited"],
+            },
       params: [
         {
           name: "url",
@@ -868,6 +900,10 @@ WidgetMetadata = {
       description: "按玩法分类浏览影片",
       requiresWebView: false,
       functionName: "loadPage",
+      belongTo: {
+            paramName: "sort_by",
+            value: ["post_date","video_viewed","most_favourited"],
+            },
       params: [
         {
           name: "url",
@@ -957,6 +993,10 @@ WidgetMetadata = {
       description: "按主题分类浏览影片",
       requiresWebView: false,
       functionName: "loadPage",
+      belongTo: {
+            paramName: "sort_by",
+            value: ["post_date","video_viewed","most_favourited"],
+            },
       params: [
         {
           name: "url",
@@ -1030,6 +1070,10 @@ WidgetMetadata = {
       description: "按杂项分类浏览影片",
       requiresWebView: false,
       functionName: "loadPage",
+      belongTo: {
+            paramName: "sort_by",
+            value: ["post_date","video_viewed","most_favourited"],
+            },
       params: [
         {
           name: "url",
