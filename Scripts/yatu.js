@@ -124,7 +124,7 @@ WidgetMetadata = {
                     ],
                 },
                 {
-                    name: "time",
+                    name: "sort_by",
                     title: "时间",
                     type: "enumeration",
                     enumOptions: [
@@ -169,7 +169,7 @@ WidgetMetadata = {
                     ],
                 },
                 {
-                    name: "level",
+                    name: "sort_by",
                     title: "等级",
                     type: "enumeration",
                     enumOptions: [
@@ -194,7 +194,7 @@ WidgetMetadata = {
             ],
         },
     ],
-    version: "1.0.3",
+    version: "1.0.4",
     requiredVersion: "0.0.1",
     description: "解析雅图每日放送更新以及各类排行榜【五折码：CHEAP.5;七折码：CHEAP】",
     author: "huangxd",
@@ -446,7 +446,7 @@ async function fetchFinalItems(genre, typ, mediaTypeDict, suffixDict) {
 async function loadClickItems(params = {}) {
     try {
         const genre = params.genre || "";
-        const typ = params.time || "";
+        const typ = params.sort_by || "";
 
         if (!genre || !typ) {
             throw new Error("必须提供分类、时间");
@@ -484,7 +484,7 @@ async function loadClickItems(params = {}) {
 async function loadScoreItems(params = {}) {
     try {
         const genre = params.genre || "";
-        const typ = params.level || "";
+        const typ = params.sort_by || "";
 
         if (!genre || !typ) {
             throw new Error("必须提供分类、等级");
