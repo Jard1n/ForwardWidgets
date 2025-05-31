@@ -1,8 +1,8 @@
 // 引用地址：https://raw.githubusercontent.com/quantumultxx/FW-Widgets/refs/heads/main/Widgets/jable.js
 WidgetMetadata = {
   id: "jable",
-  title: "Jable全站分类",
-  description: "获取Jable分类榜单",
+  title: "Jable",
+  description: "获取Jable全站视频",
   author: "nibiru",
   site: "https://github.com/quantumultxx/FW-Widgets",
   version: "1.0.5",
