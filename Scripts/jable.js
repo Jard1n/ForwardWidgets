@@ -568,15 +568,15 @@ WidgetMetadata = {
       description: "按地点分类浏览影片",
       requiresWebView: false,
       functionName: "loadPage",
-      belongTo: {
-            paramName: "sort_by",
-            value: ["post_date","video_viewed","most_favourited"],
-            },
       params: [
         {
           name: "url",
           title: "选择地点",
           type: "enumeration",
+          belongTo: {
+            paramName: "sort_by",
+            value: ["post_date","video_viewed","most_favourited"],
+            },
           enumOptions: [
             { 
               title: "电车", 
@@ -653,10 +653,6 @@ WidgetMetadata = {
       description: "按身材分类浏览影片",
       requiresWebView: false,
       functionName: "loadPage",
-      belongTo: {
-            paramName: "sort_by",
-            value: ["post_date","video_viewed","most_favourited"],
-            },
       params: [
         {
           name: "url",
@@ -738,15 +734,15 @@ WidgetMetadata = {
       description: "按角色分类浏览影片",
       requiresWebView: false,
       functionName: "loadPage",
-      belongTo: {
-            paramName: "sort_by",
-            value: ["post_date","video_viewed","most_favourited"],
-            },
       params: [
         {
           name: "url",
           title: "选择角色",
           type: "enumeration",
+          belongTo: {
+            paramName: "sort_by",
+            value: ["post_date","video_viewed","most_favourited"],
+            },
           enumOptions: [
             { 
               title: "人妻", 
@@ -827,15 +823,15 @@ WidgetMetadata = {
       description: "按交合分类浏览影片",
       requiresWebView: false,
       functionName: "loadPage",
-      belongTo: {
-            paramName: "sort_by",
-            value: ["post_date","video_viewed","most_favourited"],
-            },
       params: [
         {
           name: "url",
           title: "选择交合",
           type: "enumeration",
+          belongTo: {
+            paramName: "sort_by",
+            value: ["post_date","video_viewed","most_favourited"],
+            },
           enumOptions: [
             { 
               title: "颜射", 
@@ -900,15 +896,15 @@ WidgetMetadata = {
       description: "按玩法分类浏览影片",
       requiresWebView: false,
       functionName: "loadPage",
-      belongTo: {
-            paramName: "sort_by",
-            value: ["post_date","video_viewed","most_favourited"],
-            },
       params: [
         {
           name: "url",
           title: "选择玩法",
           type: "enumeration",
+          belongTo: {
+            paramName: "sort_by",
+            value: ["post_date","video_viewed","most_favourited"],
+            },
           enumOptions: [
             { 
               title: "露出", 
@@ -993,15 +989,15 @@ WidgetMetadata = {
       description: "按主题分类浏览影片",
       requiresWebView: false,
       functionName: "loadPage",
-      belongTo: {
-            paramName: "sort_by",
-            value: ["post_date","video_viewed","most_favourited"],
-            },
       params: [
         {
           name: "url",
           title: "选择主题",
           type: "enumeration",
+          belongTo: {
+            paramName: "sort_by",
+            value: ["post_date","video_viewed","most_favourited"],
+            },
           enumOptions: [
             { 
               title: "角色剧情", 
@@ -1070,15 +1066,15 @@ WidgetMetadata = {
       description: "按杂项分类浏览影片",
       requiresWebView: false,
       functionName: "loadPage",
-      belongTo: {
-            paramName: "sort_by",
-            value: ["post_date","video_viewed","most_favourited"],
-            },
       params: [
         {
           name: "url",
           title: "选择杂项",
           type: "enumeration",
+          belongTo: {
+            paramName: "sort_by",
+            value: ["post_date","video_viewed","most_favourited"],
+            },
           enumOptions: [
             { 
               title: "录像", 
