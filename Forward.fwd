@@ -4,6 +4,15 @@
   "icon": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/icon.png",
   "widgets": [
     {
+      "id": "javrate",
+      "title": "JAVRate",
+      "description": "获取 JAVRate 推荐数据",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.0",
+      "author": "Ti",
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/javrate.js"
+    },
+    {
       "id": "javday",
       "title": "JAVDay",
       "description": "获取 JAVDay 推荐",
@@ -14,28 +23,46 @@
     },
     {
       "id": "jable",
-      "title": "Jable全站分类",
-      "description": "获取Jable分类榜单",
+      "title": "Jable",
+      "description": "获取Jable全站视频",
       "requiredVersion": "0.0.1",
-      "version": "1.0.3",
+      "version": "1.0.5",
       "author": "nibiru",
       "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/jable.js"
+    },
+    {
+      "id": "Pornhub",
+      "title": "Pornhub",
+      "description": "在线观看Pornhub",
+      "requiredVersion": "0.0.1",
+      "version": "0.0.1",
+      "author": "海带",
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/Pornhub.js"
     },
     {
       "id": "trakt",
       "title": "Trakt我看&Trakt个性化推荐",
       "description": "解析Trakt想看、在看、已看、片单、追剧日历",
       "requiredVersion": "0.0.1",
-      "version": "1.0.9",
+      "version": "1.0.10",
       "author": "huangxd",
       "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/trakt.js"
+    },
+    {
+      "id": "zhuijurili",
+      "title": "追剧日历",
+      "description": "解析追剧日历今/明日播出剧集/番剧/国漫/综艺、各项榜单、今日推荐",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.3",
+      "author": "huangxd",
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/zhuijurili.js"
     },
     {
       "id": "hot_picks",
       "title": "热门精选",
       "description": "获取最新热播剧和热门影片推荐",
       "requiredVersion": "0.0.1",
-      "version": "1.0.9",
+      "version": "1.1.0",
       "author": "两块",
       "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/HotPicks.js"
     },
