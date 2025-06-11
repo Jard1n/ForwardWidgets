@@ -82,7 +82,7 @@
       "requiredVersion": "0.0.1",
       "version": "1.0.0",
       "author": "pack1r",
-      "url": "https://raw.githubusercontent.com/pack1r/ForwardWidgets/refs/heads/main/widgets/douban.js"
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/douban.js"
     },
     {
       "id": "tmdb",
