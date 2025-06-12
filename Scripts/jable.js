@@ -5,9 +5,37 @@ WidgetMetadata = {
   description: "获取Jable全站视频",
   author: "nibiru",
   site: "https://github.com/quantumultxx/FW-Widgets",
-  version: "1.0.5",
+  version: "1.0.6",
   requiredVersion: "0.0.1",
   modules: [
+    // 搜索模块
+    {
+      title: "搜索",
+      description: "搜索",
+      requiresWebView: false,
+      functionName: "search",
+      params: [
+        {
+          name: "keyword",
+          title: "关键词",
+          type: "input",
+          description: "关键词",
+        },
+        {
+          name: "sort_by",
+          title: "排序",
+          type: "enumeration",
+          description: "排序",
+          enumOptions: [
+            { title: "最多观看", value: "video_viewed" },
+            { title: "近期最佳", value: "post_date_and_popularity" },
+            { title: "最近更新", value: "post_date" },
+            { title: "最多收藏", value: "most_favourited" },
+          ],
+        },
+        { name: "from", title: "页码", type: "page", description: "页码", value: "1" },
+      ],
+    },
     // 热门模块
     {
       title: "热门",
@@ -68,7 +96,7 @@ WidgetMetadata = {
       ],
     },
 
-        // 中文模块
+    // 中文模块
     {
       title: "中文",
       description: "中文字幕影片",
@@ -97,7 +125,7 @@ WidgetMetadata = {
         { name: "from", title: "页码", type: "page", description: "页码", value: "1" },
       ],
     },
-                // 女优模块
+    // 女优模块
     {
       title: "女优",
       description: "按女优分类浏览影片",
@@ -379,7 +407,7 @@ WidgetMetadata = {
       ],
     },
 
-        // 衣着模块
+    // 衣着模块
     {
       title: "衣着",
       description: "按衣着分类浏览影片",
@@ -476,7 +504,7 @@ WidgetMetadata = {
         { name: "from", title: "页码", type: "page", description: "页码", value: "1" },
       ],
     },
-                // 剧情模块
+    // 剧情模块
     {
       title: "剧情",
       description: "按剧情分类浏览影片",
@@ -561,8 +589,7 @@ WidgetMetadata = {
         { name: "from", title: "页码", type: "page", description: "页码", value: "1" },
       ],
     },
-
-                // 地点模块
+    // 地点模块
     {
       title: "地点",
       description: "按地点分类浏览影片",
@@ -647,7 +674,7 @@ WidgetMetadata = {
         { name: "from", title: "页码", type: "page", description: "页码", value: "1" },
       ],
     },
-                // 身材模块
+    // 身材模块
     {
       title: "身材",
       description: "按身材分类浏览影片",
@@ -728,7 +755,7 @@ WidgetMetadata = {
         { name: "from", title: "页码", type: "page", description: "页码", value: "1" },
       ],
     },    
-                // 角色模块
+    // 角色模块
     {
       title: "角色",
       description: "按角色分类浏览影片",
@@ -817,7 +844,7 @@ WidgetMetadata = {
         { name: "from", title: "页码", type: "page", description: "页码", value: "1" },
       ],
     },
-                // 交合模块
+    // 交合模块
     {
       title: "交合",
       description: "按交合分类浏览影片",
@@ -890,7 +917,7 @@ WidgetMetadata = {
         { name: "from", title: "页码", type: "page", description: "页码", value: "1" },
       ],
     },
-                // 玩法模块
+    // 玩法模块
     {
       title: "玩法",
       description: "按玩法分类浏览影片",
@@ -983,7 +1010,7 @@ WidgetMetadata = {
         { name: "from", title: "页码", type: "page", description: "页码", value: "1" },
       ],
     },    
-                    // 主题模块
+    // 主题模块
     {
       title: "主题",
       description: "按主题分类浏览影片",
@@ -1060,7 +1087,7 @@ WidgetMetadata = {
         { name: "from", title: "页码", type: "page", description: "页码", value: "1" },
       ],
     },
-                // 杂项模块
+    // 杂项模块
     {
       title: "杂项",
       description: "按杂项分类浏览影片",
@@ -1122,9 +1149,19 @@ WidgetMetadata = {
 
 
 async function search(params = {}) {
-  const url = `https://jable.tv/search/${params.keyword}/?mode=async&function=get_block&block_id=list_videos_videos_list_search_result&q=${params.keyword}`;
-  params.url = url;
-  return await loadPage(params);
+  const keyword = encodeURIComponent(params.keyword || "");
+  
+  let url = `https://jable.tv/search/${keyword}/?mode=async&function=get_block&block_id=list_videos_videos_list_search_result&q=${keyword}`;
+  
+  if (params.sort_by) {
+    url += `&sort_by=${params.sort_by}`;
+  }
+  
+  if (params.from) {
+    url += `&from=${params.from}`;
+  }
+  
+  return await loadPage({ ...params, url });
 }
 
 async function loadPage(params = {}) {
