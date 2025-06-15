@@ -37,6 +37,10 @@ WidgetMetadata = {
                             title: "看过-电视",
                             value: "history/shows/added/asc",
                         },
+                        {
+                            title: "随机想看(从想看列表中无序抽取9个影片)",
+                            value: "random_watchlist",
+                        },
                     ],
                 },
                 {
@@ -197,14 +201,14 @@ WidgetMetadata = {
             ],
         },
     ],
-    version: "1.0.10",
+    version: "1.0.11",
     requiredVersion: "0.0.1",
     description: "解析Trakt想看、在看、已看、片单、追剧日历以及根据个人数据生成的个性化推荐【五折码：CHEAP.5;七折码：CHEAP】",
     author: "huangxd",
     site: "https://github.com/huangxd-/ForwardWidgets"
 };
 
-function extractTraktUrlsFromResponse(responseData, minNum, maxNum) {
+function extractTraktUrlsFromResponse(responseData, minNum, maxNum, random = false) {
     let docId = Widget.dom.parse(responseData);
     let metaElements = Widget.dom.select(docId, 'meta[content^="https://trakt.tv/"]');
     if (!metaElements || metaElements.length === 0) {
@@ -213,9 +217,13 @@ function extractTraktUrlsFromResponse(responseData, minNum, maxNum) {
 
     let traktUrls = Array.from(new Set(metaElements
         .map(el => el.getAttribute?.('content') || Widget.dom.attr(el, 'content'))
-        .filter(Boolean)))
-        .slice(minNum - 1, maxNum);
-    return traktUrls;
+        .filter(Boolean)));
+    if (random) {
+        const shuffled = traktUrls.sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, Math.min(9, shuffled.length));
+    } else {
+        return traktUrls.slice(minNum - 1, maxNum);
+    }
 }
 
 function extractTraktUrlsInProgress(responseData, minNum, maxNum) {
@@ -290,7 +298,7 @@ async function fetchImdbIdsFromTraktUrls(traktUrls) {
     return imdbIds;
 }
 
-async function fetchTraktData(url, headers = {}, status, minNum, maxNum, order = "") {
+async function fetchTraktData(url, headers = {}, status, minNum, maxNum, random = false, order = "") {
     try {
         const response = await Widget.http.get(url, {
             headers: {
@@ -309,7 +317,7 @@ async function fetchTraktData(url, headers = {}, status, minNum, maxNum, order =
         if (status === "progress") {
             traktUrls = extractTraktUrlsInProgress(response.data, minNum, maxNum);
         } else {
-            traktUrls = extractTraktUrlsFromResponse(response.data, minNum, maxNum);
+            traktUrls = extractTraktUrlsFromResponse(response.data, minNum, maxNum, random);
         }
 
         if (order === "desc") {
@@ -327,7 +335,11 @@ async function loadInterestItems(params = {}) {
     try {
         const page = params.page;
         const userName = params.user_name || "";
-        const status = params.status || "";
+        let status = params.status || "";
+        const random = status === "random_watchlist";
+        if (random) {
+            status = "watchlist";
+        }
         const count = 20
         const size = status === "watchlist" ? 6 : 3
         const minNum = ((page - 1) % size) * count + 1
@@ -338,8 +350,12 @@ async function loadInterestItems(params = {}) {
             throw new Error("必须提供 Trakt 用户名");
         }
 
+        if (random && page > 1) {
+            return [];
+        }
+
         let url = `https://trakt.tv/users/${userName}/${status}?page=${traktPage}`;
-        return await fetchTraktData(url, {}, status, minNum, maxNum);
+        return await fetchTraktData(url, {}, status, minNum, maxNum, random);
     } catch (error) {
         console.error("处理失败:", error);
         throw error;
@@ -415,7 +431,7 @@ async function loadCalendarItems(params = {}) {
         const formattedStartDate = startDate.toISOString().split('T')[0];
 
         let url = `https://trakt.tv/calendars/my/shows-movies/${formattedStartDate}/${days}`;
-        return await fetchTraktData(url, {Cookie: cookie}, "", 1, 100, order);
+        return await fetchTraktData(url, {Cookie: cookie}, "", 1, 100, false, order);
     } catch (error) {
         console.error("处理失败:", error);
         throw error;
