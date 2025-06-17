@@ -1197,7 +1197,6 @@ async function loadPageSections(params = {}) {
     if (params["from"]) {
       url += `&from=${params.from}`;
     }
-    // 1. 获取HTML内容
     console.log("=== 获取HTML内容 ===");
     const response = await Widget.http.get(url, {
       headers: {
@@ -1224,58 +1223,34 @@ async function loadPageSections(params = {}) {
 }
 
 async function parseHtml(htmlContent) {
-  console.log("\n=== 解析HTML ===");
   const $ = Widget.html.load(htmlContent);
   const items = [];
   
-  const itemSelector = ".video-item";
-  
-  $(itemSelector).each((index, element) => {
+  $(".video-img-box").each((index, element) => {
     const $item = $(element);
+    
     const titleLink = $item.find(".title a");
+    const title = titleLink.text().trim();
     const url = titleLink.attr("href") || "";
     
-    if (url && url.includes("jable.tv")) {
-      const coverImg = $item.find("img.lazyload");
-      const durationEl = $item.find(".duration");
-      
-      const item = {
-        id: url,
-        type: "url",
-        title: titleLink.text().trim(),
-        durationText: durationEl.text().trim(),
-        backdropPath: coverImg.data("src") || coverImg.attr("src"),
-        previewUrl: coverImg.data("preview") || "",
-        link: url
-      };
-      console.log("解析到视频项:", item.title);
-      items.push(item);
-    }
-  });
-
-  if (items.length === 0) {
-    console.log("主选择器未找到内容，尝试备用选择器...");
-    $(".video-img-box").each((index, element) => {
-      const $item = $(element);
-      const titleLink = $item.find(".title a");
-      const url = titleLink.attr("href") || "";
-      
-      if (url) {
-        const coverImg = $item.find("img");
-        const durationEl = $item.find(".label");
-        
-        items.push({
-          id: url,
-          type: "url",
-          title: titleLink.text().trim(),
-          durationText: durationEl.text().trim(),
-          backdropPath: coverImg.attr("data-src") || coverImg.attr("src"),
-          previewUrl: coverImg.attr("data-preview") || "",
-          link: url
-        });
-      }
+    if (!url.includes("jable.tv")) return; 
+    
+    const durationEl = $item.find(".label"); 
+    const coverImg = $item.find("img");
+    const imgSrc = coverImg.attr("data-src") || 
+                   coverImg.attr("src") || 
+                   coverImg.attr("data-preview");
+    
+    items.push({
+      id: url,
+      type: "url",
+      title: title,
+      durationText: durationEl.text().trim(),
+      backdropPath: imgSrc,
+      previewUrl: coverImg.attr("data-preview") || "",
+      link: url
     });
-  }
+  });
 
   return [{
     id: "video-list",
@@ -1284,8 +1259,6 @@ async function parseHtml(htmlContent) {
     childItems: items
   }];
 }
-
-
 
 async function loadDetail(link) {
   const response = await Widget.http.get(link, {
