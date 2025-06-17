@@ -1224,65 +1224,68 @@ async function loadPageSections(params = {}) {
 }
 
 async function parseHtml(htmlContent) {
-  // 2. 解析HTML
   console.log("\n=== 解析HTML ===");
   const $ = Widget.html.load(htmlContent);
-  const sectionSelector = ".site-content .py-3,.pb-e-lg-40";
-  const itemSelector = ".video-img-box";
-  const coverSelector = "img";
-  const durationSelector = ".absolute-bottom-right .label";
-  const titleSelector = ".title a";
-
-  let sections = [];
-  //use cheerio to parse html
-  const sectionElements = $(sectionSelector).toArray();
-  for (const sectionElement of sectionElements) {
-    const $sectionElement = $(sectionElement);
-    var items = [];
-    const sectionTitle = $sectionElement.find(".title-box .h3-md").first();
-    const sectionTitleText = sectionTitle.text();
-    console.log("sectionTitleText:", sectionTitleText);
-    const itemElements = $sectionElement.find(itemSelector).toArray();
-    console.log("itemElements:", itemElements);
-    if (itemElements && itemElements.length > 0) {
-      for (const itemElement of itemElements) {
-        const $itemElement = $(itemElement);
-        const titleId = $itemElement.find(titleSelector).first();
-        console.log("titleId:", titleId.length);
-        const url = titleId.attr("href") || "";
-        console.log("url:", url);
-        if (url && url.includes("jable.tv")) {
-          const durationId = $itemElement.find(durationSelector).first();
-          const coverId = $itemElement.find(coverSelector).first();
-          const cover = coverId.attr("data-src");
-          const video = coverId.attr("data-preview");
-          const title = titleId.text();
-          const duration = durationId.text();
-          const item = {
-            id: url,
-            type: "url",
-            title: title,
-            durationText: duration,
-            backdropPath: cover,
-            previewUrl: video,
-            link: url
-          };
-          console.log("item:", item);
-          items.push(item);
-        }
-      }
-
-      sections.push({
-        id: sectionTitleText,
-        type: "web",
-        title: sectionTitleText,
-        childItems: items,
-      });
+  const items = [];
+  
+  const itemSelector = ".video-item";
+  
+  $(itemSelector).each((index, element) => {
+    const $item = $(element);
+    const titleLink = $item.find(".title a");
+    const url = titleLink.attr("href") || "";
+    
+    if (url && url.includes("jable.tv")) {
+      const coverImg = $item.find("img.lazyload");
+      const durationEl = $item.find(".duration");
+      
+      const item = {
+        id: url,
+        type: "url",
+        title: titleLink.text().trim(),
+        durationText: durationEl.text().trim(),
+        backdropPath: coverImg.data("src") || coverImg.attr("src"),
+        previewUrl: coverImg.data("preview") || "",
+        link: url
+      };
+      console.log("解析到视频项:", item.title);
+      items.push(item);
     }
+  });
+
+  if (items.length === 0) {
+    console.log("主选择器未找到内容，尝试备用选择器...");
+    $(".video-img-box").each((index, element) => {
+      const $item = $(element);
+      const titleLink = $item.find(".title a");
+      const url = titleLink.attr("href") || "";
+      
+      if (url) {
+        const coverImg = $item.find("img");
+        const durationEl = $item.find(".label");
+        
+        items.push({
+          id: url,
+          type: "url",
+          title: titleLink.text().trim(),
+          durationText: durationEl.text().trim(),
+          backdropPath: coverImg.attr("data-src") || coverImg.attr("src"),
+          previewUrl: coverImg.attr("data-preview") || "",
+          link: url
+        });
+      }
+    });
   }
-  console.log("sections:", sections);
-  return sections;
+
+  return [{
+    id: "video-list",
+    type: "web",
+    title: "视频列表",
+    childItems: items
+  }];
 }
+
+
 
 async function loadDetail(link) {
   const response = await Widget.http.get(link, {
