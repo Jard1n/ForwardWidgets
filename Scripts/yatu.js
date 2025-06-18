@@ -197,7 +197,7 @@ WidgetMetadata = {
             ],
         },
     ],
-    version: "1.0.5",
+    version: "1.0.6",
     requiredVersion: "0.0.1",
     description: "解析雅图每日放送更新以及各类排行榜【五折码：CHEAP.5;七折码：CHEAP】",
     author: "huangxd",
@@ -341,7 +341,7 @@ async function loadLatestItems(params = {}) {
             sin3: 'tv',
         };
 
-        const response = await Widget.http.get("http://www.yatu.tv:2082/zuijin.asp", {
+        const response = await Widget.http.get("https://gist.githubusercontent.com/huangxd-/28a30eac8051ccb05a43c6f49a117286/raw/zuijin.asp", {
             headers: {
                 "User-Agent":
                     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
@@ -405,7 +405,7 @@ function getClickItemInfos(data, typ) {
 }
 
 async function fetchFinalItems(genre, typ, mediaTypeDict, suffixDict) {
-    const response = await Widget.http.get(`http://www.yatu.tv:2082/top/${genre}.${suffixDict[genre]}`, {
+    const response = await Widget.http.get(`https://gist.githubusercontent.com/huangxd-/28a30eac8051ccb05a43c6f49a117286/raw/${genre}.${suffixDict[genre]}`, {
         headers: {
             "User-Agent":
                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",

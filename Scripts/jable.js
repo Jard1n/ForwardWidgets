@@ -1197,7 +1197,6 @@ async function loadPageSections(params = {}) {
     if (params["from"]) {
       url += `&from=${params.from}`;
     }
-    console.log("=== 获取HTML内容 ===");
     const response = await Widget.http.get(url, {
       headers: {
         "User-Agent":
