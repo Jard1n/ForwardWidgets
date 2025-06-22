@@ -76,6 +76,24 @@
       "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/HotPicks.js"
     },
     {
+      "id": "bangumi",
+      "title": "Bangumi 热门榜单",
+      "description": "获取Bangumi近期热门、每日放送数据，支持榜单筛选",
+      "requiredVersion": "0.0.1",
+      "version": "2.0.0", 
+      "author": "Autism",
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/Bangumi_v2.0.0.js"
+    },
+    {
+      "id": "imdb_v2",
+      "title": "IMDb v2",
+      "description": "聚合 IMDb 热门影视资源",
+      "requiredVersion": "0.0.1",
+      "version": "2.0.0",
+      "author": "Autism",
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/IMDb.js"
+    },
+    {
       "id": "douban",
       "title": "豆瓣",
       "description": "解析豆瓣片单，获取视频信息",
