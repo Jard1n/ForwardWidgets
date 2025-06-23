@@ -5,7 +5,7 @@ WidgetMetadata = {
   description: "获取Jable全站视频",
   author: "nibiru",
   site: "https://github.com/quantumultxx/FW-Widgets",
-  version: "1.0.6",
+  version: "1.0.7",
   requiredVersion: "0.0.1",
   detailCacheDuration: 60,
   modules: [
@@ -1182,7 +1182,11 @@ async function search(params = {}) {
 async function loadPage(params = {}) {
   const sections = await loadPageSections(params);
   const items = sections.flatMap((section) => section.childItems);
-  return items;
+  
+  return items.map(item => ({
+    ...item,
+    mediaType: "movie"
+  }));
 }
 
 async function loadPageSections(params = {}) {
@@ -1211,12 +1215,9 @@ async function loadPageSections(params = {}) {
     }
 
     const htmlContent = response.data;
-    console.log(`获取到HTML内容长度: ${htmlContent.length} 字符`);
-    console.log(htmlContent);
-
     return parseHtml(htmlContent);
   } catch (error) {
-    console.error("测试过程出错:", error.message);
+    console.error("加载页面失败:", error.message);
     throw error;
   }
 }
@@ -1244,10 +1245,13 @@ async function parseHtml(htmlContent) {
       id: url,
       type: "url",
       title: title,
-      durationText: durationEl.text().trim(),
+      imgSrc: imgSrc,
       backdropPath: imgSrc,
       previewUrl: coverImg.attr("data-preview") || "",
-      link: url
+      link: url,
+      description: "",
+      durationText: durationEl.text().trim(),
+      mediaType: "movie"
     });
   });
 
@@ -1265,25 +1269,34 @@ async function loadDetail(link) {
       "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
     },
   });
-  //get hls with regex var hlsUrl = 'https://hot-box-gen.mushroomtrack.com/hls/TJHqwWuFPCwYqa4hyv1cCg/1746892414/50000/50377/50377.m3u8';
-  const hlsUrl = response.data.match(/var hlsUrl = '(.*?)';/)[1];
+  
+  const htmlContent = response.data;
+  const $ = Widget.html.load(htmlContent);
+  
+  const title = $('title').text().replace(' - Jable', '').trim();
+  const posterEl = $('meta[property="og:image"]');
+  
+  const hlsMatch = htmlContent.match(/var hlsUrl = '(.*?)';/);
+  let hlsUrl = hlsMatch && hlsMatch[1];
+  
   if (!hlsUrl) {
-    throw new Error("无法获取有效的HLS URL");
+    const playerEl = $('video');
+    if (playerEl.length) {
+      hlsUrl = playerEl.attr('src');
+    }
   }
-  console.log("hlsUrl:", hlsUrl);
-  const item = {
+  
+  if (!hlsUrl) {
+    throw new Error("无法获取有效的视频URL");
+  }
+  
+  return {
     id: link,
-    type: "detail",
+    type: "url",
     videoUrl: hlsUrl,
     customHeaders: {
-      "Referer": link,
-      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-    },
+      Referer: link,
+      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
   };
-  const sections = await parseHtml(response.data);
-  const items = sections.flatMap((section) => section.childItems);
-  if (items.length > 0) {
-    item.childItems = items;
-  }
-  return item;
 }
