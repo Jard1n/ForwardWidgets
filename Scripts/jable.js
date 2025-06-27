@@ -5,7 +5,7 @@ WidgetMetadata = {
   description: "获取 Jable 视频",
   author: "nibiru",
   site: "https://github.com/quantumultxx/FW-Widgets",
-  version: "1.0.7",
+  version: "1.0.8",
   requiredVersion: "0.0.1",
   detailCacheDuration: 60,
   modules: [
@@ -51,8 +51,7 @@ WidgetMetadata = {
           title: "列表地址",
           type: "constant",
           description: "列表地址",
-          value:
-            "https://jable.tv/hot/?mode=async&function=get_block&block_id=list_videos_common_videos_list",
+          value: "https://jable.tv/hot/?mode=async&function=get_block&block_id=list_videos_common_videos_list",
         },
         {
           name: "sort_by",
@@ -82,8 +81,7 @@ WidgetMetadata = {
           title: "列表地址",
           type: "constant",
           description: "列表地址",
-          value:
-            "https://jable.tv/new-release/?mode=async&function=get_block&block_id=list_videos_common_videos_list",
+          value: "https://jable.tv/new-release/?mode=async&function=get_block&block_id=list_videos_common_videos_list",
         },
         {
           name: "sort_by",
@@ -113,8 +111,7 @@ WidgetMetadata = {
           title: "列表地址",
           type: "constant",
           description: "列表地址",
-          value:
-            "https://jable.tv/categories/chinese-subtitle/?mode=async&function=get_block&block_id=list_videos_common_videos_list",
+          value: "https://jable.tv/categories/chinese-subtitle/?mode=async&function=get_block&block_id=list_videos_common_videos_list",
         },
         {
           name: "sort_by",
@@ -1182,11 +1179,7 @@ async function search(params = {}) {
 async function loadPage(params = {}) {
   const sections = await loadPageSections(params);
   const items = sections.flatMap((section) => section.childItems);
-  
-  return items.map(item => ({
-    ...item,
-    mediaType: "movie"
-  }));
+  return items;
 }
 
 async function loadPageSections(params = {}) {
@@ -1215,52 +1208,71 @@ async function loadPageSections(params = {}) {
     }
 
     const htmlContent = response.data;
+
     return parseHtml(htmlContent);
   } catch (error) {
-    console.error("加载页面失败:", error.message);
+    console.error("测试过程出错:", error.message);
     throw error;
   }
 }
 
 async function parseHtml(htmlContent) {
   const $ = Widget.html.load(htmlContent);
-  const items = [];
-  
-  $(".video-img-box").each((index, element) => {
-    const $item = $(element);
-    
-    const titleLink = $item.find(".title a");
-    const title = titleLink.text().trim();
-    const url = titleLink.attr("href") || "";
-    
-    if (!url.includes("jable.tv")) return; 
-    
-    const durationEl = $item.find(".label"); 
-    const coverImg = $item.find("img");
-    const imgSrc = coverImg.attr("data-src") || 
-                   coverImg.attr("src") || 
-                   coverImg.attr("data-preview");
-    
-    items.push({
-      id: url,
-      type: "url",
-      title: title,
-      imgSrc: imgSrc,
-      backdropPath: imgSrc,
-      previewUrl: coverImg.attr("data-preview") || "",
-      link: url,
-      description: "",
-      durationText: durationEl.text().trim(),
-      mediaType: "movie"
-    });
-  });
+  const sectionSelector = ".site-content .py-3,.pb-e-lg-40";
+  const itemSelector = ".video-img-box";
+  const coverSelector = "img";
+  const durationSelector = ".absolute-bottom-right .label";
+  const titleSelector = ".title a";
 
-  return [{
-    id: "video-list",
-    type: "web",
-    title: "视频列表",
-    childItems: items
-  }];
+  let sections = [];
+  const sectionElements = $(sectionSelector).toArray();
+  
+  for (const sectionElement of sectionElements) {
+    const $sectionElement = $(sectionElement);
+    var items = [];
+    const sectionTitle = $sectionElement.find(".title-box .h3-md").first();
+    const sectionTitleText = sectionTitle.text();
+    const itemElements = $sectionElement.find(itemSelector).toArray();
+    
+    if (itemElements && itemElements.length > 0) {
+      for (const itemElement of itemElements) {
+        const $itemElement = $(itemElement);
+        const titleId = $itemElement.find(titleSelector).first();
+        const url = titleId.attr("href") || "";
+        
+        if (url && url.includes("jable.tv")) {
+          const durationId = $itemElement.find(durationSelector).first();
+          const coverId = $itemElement.find(coverSelector).first();
+          const cover = coverId.attr("data-src");
+          const video = coverId.attr("data-preview");
+          const title = titleId.text();
+          const duration = durationId.text().trim();
+          
+          const item = {
+            id: url,
+            type: "url",
+            title: title,
+            backdropPath: cover,
+            previewUrl: video,
+            link: url,
+            mediaType: "movie",
+            durationText: duration,
+            description: duration
+          };
+          items.push(item);
+        }
+      }
+    }
+    
+    if (items.length > 0) {
+      sections.push({
+        title: sectionTitleText,
+        childItems: items
+      });
+    }
+  }
+  
+  return sections;
 }
 
 async function loadDetail(link) {
@@ -1269,34 +1281,24 @@ async function loadDetail(link) {
       "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
     },
   });
-  
-  const htmlContent = response.data;
-  const $ = Widget.html.load(htmlContent);
-  
-  const title = $('title').text().replace(' - Jable', '').trim();
-  const posterEl = $('meta[property="og:image"]');
-  
-  const hlsMatch = htmlContent.match(/var hlsUrl = '(.*?)';/);
-  let hlsUrl = hlsMatch && hlsMatch[1];
-  
+  const hlsUrl = response.data.match(/var hlsUrl = '(.*?)';/)[1];
   if (!hlsUrl) {
-    const playerEl = $('video');
-    if (playerEl.length) {
-      hlsUrl = playerEl.attr('src');
-    }
+    throw new Error("无法获取有效的HLS URL");
   }
-  
-  if (!hlsUrl) {
-    throw new Error("无法获取有效的视频URL");
-  }
-  
-  return {
+  const item = {
     id: link,
-    type: "url",
+    type: "detail",
     videoUrl: hlsUrl,
+    mediaType: "movie",
     customHeaders: {
-      Referer: link,
-      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-    }
+      "Referer": link,
+      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+    },
   };
+  const sections = await parseHtml(response.data);
+  const items = sections.flatMap((section) => section.childItems);
+  if (items.length > 0) {
+    item.childItems = items;
+  }
+  return item;
 }
