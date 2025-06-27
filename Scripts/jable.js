@@ -2,7 +2,7 @@
 WidgetMetadata = {
   id: "jable",
   title: "Jable",
-  description: "获取Jable全站视频",
+  description: "获取 Jable 视频",
   author: "nibiru",
   site: "https://github.com/quantumultxx/FW-Widgets",
   version: "1.0.7",
