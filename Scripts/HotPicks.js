@@ -7,7 +7,7 @@ var WidgetMetadata = {
   description: "获取最新热播剧和热门影片推荐",
   author: "两块",
   site: "https://github.com/2kuai/ForwardWidgets",
-  version: "1.1.4",
+  version: "1.1.6",
   requiredVersion: "0.0.1",
   modules: [
     {
@@ -275,8 +275,8 @@ var WidgetMetadata = {
             type: "enumeration",
             description: "选择剧集上映时间",
             enumOptions: [
-                { title: "即将上线", value: "coming_soon" },
-                { title: "正在热播", value: "now_playing" }
+                { title: "正在热播", value: "now_playing" },
+                { title: "即将上线", value: "coming_soon" }
             ]
         },
         {
@@ -533,6 +533,10 @@ async function getDoubanRecs(params = {}, mediaType) {
 // 悬疑剧场
 async function getSuspenseTheater(params = {}) {
   try {
+    const tmdbIdBlocklist = [
+      "76582"
+    ]; // 在此数组中添加需要过滤的 TMDB ID
+
     const response = await Widget.http.get('https://raw.githubusercontent.com/2kuai/ForwardWidgets/main/data/theater-data.json', {
       headers: {
         "User-Agent": USER_AGENT
@@ -560,6 +564,7 @@ async function getSuspenseTheater(params = {}) {
           })));
         }
       }
+      results.sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate));
     } else {
       if (!data[sortBy]) throw new Error(`未找到 ${sortBy} 数据`);
       if (!data[sortBy][section]) throw new Error(`${sortBy} 中没有 ${type} 数据`);
@@ -569,7 +574,7 @@ async function getSuspenseTheater(params = {}) {
       }));
     }
 
-    return results;
+    return results.filter(item => !tmdbIdBlocklist.includes(String(item.id)));
     
   } catch (error) {
     console.error(`获取剧场数据失败: ${error.message}`);
