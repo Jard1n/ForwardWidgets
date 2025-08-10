@@ -16,7 +16,7 @@
 WidgetMetadata = {
   id: "forward.auto.danmu",
   title: "自动链接弹幕",
-  version: "1.0.0",
+  version: "1.0.2",
   requiredVersion: "0.0.2",
   description: "自动获取播放链接并从服务器获取弹幕【五折码：CHEAP.5;七折码：CHEAP】",
   author: "huangxd",
@@ -46,6 +46,22 @@ WidgetMetadata = {
         {
           title: "678",
           value: "https://se.678.ooo",
+        },
+      ],
+    },
+    {
+      name: "debug",
+      title: "调试日志",
+      type: "enumeration",
+      value: "false",
+      enumOptions: [
+        {
+            title: "关",
+            value: "false",
+        },
+        {
+            title: "开",
+            value: "true",
         },
       ],
     },
@@ -83,7 +99,7 @@ async function fetchTmdbData(id, type) {
         console.log("搜索内容失败：", `/${type}/${id}`);
         return null;
     }
-    console.log("tmdbResults:" + JSON.stringify(tmdbResult, null, 2));
+    // console.log("tmdbResults:" + JSON.stringify(tmdbResult, null, 2));
     // console.log("tmdbResults.total_results:" + tmdbResults.total_results);
     // console.log("tmdbResults.results[0]:" + tmdbResults.results[0]);
     return tmdbResult;
@@ -107,7 +123,7 @@ async function getPlayurls(title, tmdbId, type, season) {
   }
 
   const data = response.data;
-  console.log(data);
+  // console.log(data);
 
   // 检查API返回状态
   if (data.msg !== "ok") {
@@ -183,10 +199,10 @@ async function getPlayurls(title, tmdbId, type, season) {
 async function searchDanmu(params) {
   const { tmdbId, type, title, season, link, videoUrl, danmu_server } = params;
 
-  const animes = await getPlayurls(title, tmdbId, type, season);
+  // const animes = await getPlayurls(title, tmdbId, type, season);
 
   return {
-    animes: animes.length === 0 ? [] : [
+    animes: [
       {
         "animeId": 1223,
         "bangumiId": "string",
@@ -298,12 +314,48 @@ function convertYoukuUrl(url) {
   return `https://v.youku.com/v_show/id_${vid}.html`;
 }
 
+function generateDanmaku(message, count) {
+  const comments = [];
+  const baseP = "1,1,25,16777215,1754803089,0,0,26732601000067074,1"; // 原始 p 字符串
+
+  for (let i = 0; i < count; i++) {
+    // 增加 cid
+    const cid = i;
+
+    // 修改 p 的第一位数字，加 5
+    const pParts = baseP.split(',');
+    pParts[0] = (parseInt(pParts[0], 10) + i * 5).toString(); // 每次增加 i * 5
+    const updatedP = pParts.join(',');
+
+    // 使用传入的 m 参数
+    const m = message;
+
+    // 生成每个弹幕对象
+    comments.push({
+      cid: cid,
+      p: updatedP,
+      m: m
+    });
+  }
+
+  return {
+    count: comments.length,
+    comments: comments
+  };
+}
+
 async function getCommentsById(params) {
-  const { danmu_server, commentId, link, videoUrl, season, episode, tmdbId, type, title } = params;
+  const { danmu_server, debug, commentId, link, videoUrl, season, episode, tmdbId, type, title } = params;
 
   const animes = await getPlayurls(title, tmdbId, type, season);
   console.log(animes.length);
-  console.log(animes[0]);
+
+  if (animes.length === 0) {
+    const count = debug === "true" ? 24 : 1;
+    return generateDanmaku("【自动链接弹幕】：相关站点没有找到这部影视剧", count);
+  }
+
+  // console.log(animes[0]);
 
   let playUrl;
   if (episode) {
@@ -320,17 +372,26 @@ async function getCommentsById(params) {
     playUrl = convertYoukuUrl(playUrl);
   }
 
-  const response = await Widget.http.get(
-    `${danmu_server}/?url=${playUrl}&ac=dm`,
-    {
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-      },
-    }
-  );
+  let response
+  try {
+    response = await Widget.http.get(
+      `${danmu_server}/?url=${playUrl}&ac=dm`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        },
+      }
+    );
+  } catch (error) {
+    // 捕获错误并输出
+    console.error("请求失败:", error);
+    // 这里你可以根据需求处理错误，比如返回特定的错误信息或状态码
+    const count = debug === "true" ? 24 : 1;
+    return generateDanmaku(`【自动链接弹幕】：弹幕服务器异常 ${error.cause} ${error}`, count);
+  }
 
-  console.log(response.data);
+  // console.log(response.data);
   // const result = parseDanmakuXML(response.data);
   // console.log(result);
   return response.data;
