@@ -16,7 +16,7 @@
 WidgetMetadata = {
   id: "forward.auto.danmu",
   title: "自动链接弹幕",
-  version: "1.0.2",
+  version: "1.0.4",
   requiredVersion: "0.0.2",
   description: "自动获取播放链接并从服务器获取弹幕【五折码：CHEAP.5;七折码：CHEAP】",
   author: "huangxd",
@@ -50,8 +50,40 @@ WidgetMetadata = {
       ],
     },
     {
+      name: "platform",
+      title: "电影弹幕优先平台",
+      type: "enumeration",
+      value: "random",
+      enumOptions: [
+        {
+            title: "随机",
+            value: "random",
+        },
+        {
+            title: "爱奇艺",
+            value: "qiyi",
+        },
+        {
+            title: "腾讯",
+            value: "qq",
+        },
+        {
+            title: "优酷",
+            value: "youku",
+        },
+        {
+            title: "芒果",
+            value: "imgo",
+        },
+        {
+            title: "哔哩哔哩",
+            value: "bilibili1",
+        },
+      ],
+    },
+    {
       name: "debug",
-      title: "调试日志",
+      title: "调试日志，是否开启前2分钟投放弹幕日志",
       type: "enumeration",
       value: "false",
       enumOptions: [
@@ -86,6 +118,23 @@ WidgetMetadata = {
   ],
 };
 
+function printFirst200Chars(data) {
+  let dataToPrint;
+
+  if (typeof data === 'string') {
+    dataToPrint = data;  // 如果是字符串，直接使用
+  } else if (Array.isArray(data)) {
+    dataToPrint = JSON.stringify(data);  // 如果是数组，转为字符串
+  } else if (typeof data === 'object') {
+    dataToPrint = JSON.stringify(data);  // 如果是对象，转为字符串
+  } else {
+    console.error("Unsupported data type");
+    return;
+  }
+
+  console.log(dataToPrint.slice(0, 200));  // 打印前200个字符
+}
+
 async function fetchTmdbData(id, type) {
     const tmdbResult = await Widget.tmdb.get(`/${type}/${id}`, {
         headers: {
@@ -99,7 +148,7 @@ async function fetchTmdbData(id, type) {
         console.log("搜索内容失败：", `/${type}/${id}`);
         return null;
     }
-    // console.log("tmdbResults:" + JSON.stringify(tmdbResult, null, 2));
+    console.log("tmdbResults:" + JSON.stringify(tmdbResult, null, 2));
     // console.log("tmdbResults.total_results:" + tmdbResults.total_results);
     // console.log("tmdbResults.results[0]:" + tmdbResults.results[0]);
     return tmdbResult;
@@ -123,7 +172,7 @@ async function getPlayurls(title, tmdbId, type, season) {
   }
 
   const data = response.data;
-  // console.log(data);
+  console.log("360kan response:", data);
 
   // 检查API返回状态
   if (data.msg !== "ok") {
@@ -184,11 +233,11 @@ async function getPlayurls(title, tmdbId, type, season) {
     }
   }
 
-  console.log(animes.length);
+  console.log("animes.length:", animes.length);
 
   if (animes.length > 1) {
     const tmdbInfo = await fetchTmdbData(tmdbId, type);
-    const tmdbYear = type === "tv" ? tmdbInfo.data.first_air_date.split("-")[0] : tmdbInfo.data.release_date.split("-")[0];
+    const tmdbYear = type === "tv" ? tmdbInfo.first_air_date.split("-")[0] : tmdbInfo.release_date.split("-")[0];
 
     animes = animes.filter(anime => anime.year == tmdbYear);
   }
@@ -345,26 +394,39 @@ function generateDanmaku(message, count) {
 }
 
 async function getCommentsById(params) {
-  const { danmu_server, debug, commentId, link, videoUrl, season, episode, tmdbId, type, title } = params;
+  const { danmu_server, platform, debug, commentId, link, videoUrl, season, episode, tmdbId, type, title } = params;
 
   const animes = await getPlayurls(title, tmdbId, type, season);
-  console.log(animes.length);
+  console.log("animes.length:", animes.length);
 
   if (animes.length === 0) {
     const count = debug === "true" ? 24 : 1;
     return generateDanmaku("【自动链接弹幕】：相关站点没有找到这部影视剧", count);
   }
 
-  // console.log(animes[0]);
+  console.log("anime: ", animes[0]);
 
   let playUrl;
   if (episode) {
     playUrl = animes[0].seriesPlaylinks[episode-1].url;
   } else {
-    playUrl = Object.values(animes[0].playlinks)[0];
+    // 获取所有平台名称
+    if (platform === "random" || !animes[0].playlinks[platform]) {
+      const allowedPlatforms = ["qiyi", "bilibili1", "imgo", "youku", "qq"];
+      // 随机选择一个平台
+      const filteredLinks = Object.keys(animes[0].playlinks).filter(platform => allowedPlatforms.includes(platform));
+      const randomPlatform = filteredLinks[Math.floor(Math.random() * filteredLinks.length)];
+      console.log(`Random platform: ${randomPlatform}`);
+      // 获取对应平台的链接
+      playUrl = animes[0].playlinks[randomPlatform];
+    } else {
+      console.log(`Selected platform: ${platform}`);
+      playUrl = animes[0].playlinks[platform];
+    }
+
   }
 
-  console.log(playUrl);
+  console.log("playUrl: ", playUrl);
 
   // 处理302场景
   // https://v.youku.com/video?vid=XNjQ4MTIwOTE2NA==&tpa=dW5pb25faWQ9MTAyMjEzXzEwMDAwNl8wMV8wMQ需要转成https://v.youku.com/v_show/id_XNjQ4MTIwOTE2NA==.html
@@ -391,8 +453,8 @@ async function getCommentsById(params) {
     return generateDanmaku(`【自动链接弹幕】：弹幕服务器异常 ${error.cause} ${error}`, count);
   }
 
-  // console.log(response.data);
+  console.log("danmu response:", printFirst200Chars(response.data));
   // const result = parseDanmakuXML(response.data);
-  // console.log(result);
+  // console.log("danmu json response:", printFirst200Chars(result));
   return response.data;
 }
