@@ -16,7 +16,7 @@
 WidgetMetadata = {
   id: "forward.auto.danmu",
   title: "自动链接弹幕",
-  version: "1.0.4",
+  version: "1.0.5",
   requiredVersion: "0.0.2",
   description: "自动获取播放链接并从服务器获取弹幕【五折码：CHEAP.5;七折码：CHEAP】",
   author: "huangxd",
@@ -154,7 +154,7 @@ async function fetchTmdbData(id, type) {
     return tmdbResult;
 }
 
-async function getPlayurls(title, tmdbId, type, season) {
+async function getPlayurls(title, tmdbInfo, type, season) {
   let queryTitle = title;
 
   const response = await Widget.http.get(
@@ -184,10 +184,9 @@ async function getPlayurls(title, tmdbId, type, season) {
   const longData = data.data.longData;
   if (longData.rows && longData.rows.length > 0) {
     animes = longData.rows.filter((anime) => {
-      if (
-        (anime.cat_name === "电视剧" || anime.cat_name === "动漫") &&
-        type === "tv"
-      ) {
+      if ((anime.cat_name === "电视剧" || anime.cat_name === "动漫") && type === "tv" && tmdbInfo.type !== "Reality") {
+        return true;
+      } else if (anime.cat_name === "综艺" && type === "tv" && tmdbInfo.type === "Reality") {
         return true;
       } else if (anime.cat_name === "电影" && type === "movie") {
         return true;
@@ -195,7 +194,7 @@ async function getPlayurls(title, tmdbId, type, season) {
         return false;
       }
     });
-    if (season) {
+    if (season && tmdbInfo.type !== "Reality") {
       // filter season
       const matchedAnimes = animes.filter((anime) => {
         if (!anime.seriesPlaylinks || anime.seriesPlaylinks.length === 0) {
@@ -231,12 +230,20 @@ async function getPlayurls(title, tmdbId, type, season) {
       });
       animes = matchedAnimes;
     }
+    if (season && tmdbInfo.type === "Reality") {
+      const matchedAnimes = animes.filter((anime) => {
+        if (anime.cat_name !== "综艺") {
+          return false;
+        }
+        return true;
+      });
+      animes = matchedAnimes;
+    }
   }
 
   console.log("animes.length:", animes.length);
 
-  if (animes.length > 1) {
-    const tmdbInfo = await fetchTmdbData(tmdbId, type);
+  if (animes.length > 1 && tmdbInfo.type !== "Reality") {
     const tmdbYear = type === "tv" ? tmdbInfo.first_air_date.split("-")[0] : tmdbInfo.release_date.split("-")[0];
 
     animes = animes.filter(anime => anime.year == tmdbYear);
@@ -393,10 +400,75 @@ function generateDanmaku(message, count) {
   };
 }
 
-async function getCommentsById(params) {
-  const { danmu_server, platform, debug, commentId, link, videoUrl, season, episode, tmdbId, type, title } = params;
 
-  const animes = await getPlayurls(title, tmdbId, type, season);
+function printParams(seriesName, episodeName, airDate, runtime, premiereDate, season, episode, tmdbId) {
+    /*
+    seriesName: 歌手
+    episodeName: 第13期：荣耀汇聚终极一战
+    airDate: 2025-08-08
+    runtime: 12360
+    premiereDate: 08/08 08:00
+    season: 10
+    episode: 13
+    tmdbId: 107467
+    */
+    const comments = [];
+    comments.push({
+        cid: 0,
+        p: "1,1,25,16777215,1754803089,0,0,26732601000067074,1",
+        m: `seriesName: ${seriesName}`
+    });
+    comments.push({
+        cid: 0,
+        p: "6,1,25,16777215,1754803089,0,0,26732601000067074,1",
+        m: `episodeName: ${episodeName}`
+    });
+    comments.push({
+        cid: 0,
+        p: "11,1,25,16777215,1754803089,0,0,26732601000067074,1",
+        m: `airDate: ${airDate}`
+    });
+    comments.push({
+        cid: 0,
+        p: "16,1,25,16777215,1754803089,0,0,26732601000067074,1",
+        m: `runtime: ${runtime}`
+    });
+    comments.push({
+        cid: 0,
+        p: "21,1,25,16777215,1754803089,0,0,26732601000067074,1",
+        m: `premiereDate: ${premiereDate}`
+    });
+    comments.push({
+        cid: 0,
+        p: "26,1,25,16777215,1754803089,0,0,26732601000067074,1",
+        m: `season: ${season}`
+    });
+    comments.push({
+        cid: 0,
+        p: "31,1,25,16777215,1754803089,0,0,26732601000067074,1",
+        m: `episode: ${episode}`
+    });
+    comments.push({
+        cid: 0,
+        p: "36,1,25,16777215,1754803089,0,0,26732601000067074,1",
+        m: `tmdbId: ${tmdbId}`
+    });
+    return {
+        count: 8,
+        comments: comments
+    };
+}
+
+async function getCommentsById(params) {
+  const { danmu_server, platform, debug, commentId, seriesName, episodeName, airDate, runtime,
+      premiereDate, link, videoUrl, season, episode, tmdbId, type, title } = params;
+
+  // 测试参数值
+  // return printParams(seriesName, episodeName, airDate, runtime, premiereDate, season, episode, tmdbId);
+
+  const tmdbInfo = await fetchTmdbData(tmdbId, type);
+
+  const animes = await getPlayurls(title, tmdbInfo, type, season);
   console.log("animes.length:", animes.length);
 
   if (animes.length === 0) {
@@ -404,29 +476,110 @@ async function getCommentsById(params) {
     return generateDanmaku("【自动链接弹幕】：相关站点没有找到这部影视剧", count);
   }
 
-  console.log("anime: ", animes[0]);
+  let playUrl = null;
+  let playUrlList = [];
+  if (tmdbInfo.type !== "Reality") {
+      console.log("anime: ", animes[0]);
 
-  let playUrl;
-  if (episode) {
-    playUrl = animes[0].seriesPlaylinks[episode-1].url;
+      if (episode) {
+        if (episode - 1 >= 0 && episode - 1 < animes[0].seriesPlaylinks.length) {
+            playUrl = animes[0].seriesPlaylinks[episode - 1].url;
+        } else {
+            const count = debug === "true" ? 24 : 1;
+            return generateDanmaku("【自动链接弹幕】：没有找到该集弹幕", count);
+        }
+      } else {
+        // 获取所有平台名称
+        if (platform === "random" || !animes[0].playlinks[platform]) {
+          const allowedPlatforms = ["qiyi", "bilibili1", "imgo", "youku", "qq"];
+          // 随机选择一个平台
+          const filteredLinks = Object.keys(animes[0].playlinks).filter(platform => allowedPlatforms.includes(platform));
+          const randomPlatform = filteredLinks[Math.floor(Math.random() * filteredLinks.length)];
+          console.log(`Random platform: ${randomPlatform}`);
+          // 获取对应平台的链接
+          playUrl = animes[0].playlinks[randomPlatform];
+        } else {
+          console.log(`Selected platform: ${platform}`);
+          playUrl = animes[0].playlinks[platform];
+        }
+      }
   } else {
-    // 获取所有平台名称
-    if (platform === "random" || !animes[0].playlinks[platform]) {
-      const allowedPlatforms = ["qiyi", "bilibili1", "imgo", "youku", "qq"];
-      // 随机选择一个平台
-      const filteredLinks = Object.keys(animes[0].playlinks).filter(platform => allowedPlatforms.includes(platform));
-      const randomPlatform = filteredLinks[Math.floor(Math.random() * filteredLinks.length)];
-      console.log(`Random platform: ${randomPlatform}`);
-      // 获取对应平台的链接
-      playUrl = animes[0].playlinks[randomPlatform];
-    } else {
-      console.log(`Selected platform: ${platform}`);
-      playUrl = animes[0].playlinks[platform];
-    }
+      if (!episodeName) {
+          const count = debug === "true" ? 24 : 1;
+          return generateDanmaku("【自动链接弹幕】：该集综艺没有集标题，匹配不了", count);
+      }
+      // 如果存在airDate，则先获取airDate的年份，并通过年份获取所有年份相关的集信息
+      let airYear = null;
+      if (airDate && airDate !== "" && /^\d{4}-\d{2}-\d{2}$/.test(airDate)) {
+          airYear = airDate.split("-")[0];
+      }
+      console.log("airYear: ", airYear);
+      for (let i = 0; i < animes.length; i++) {
+          for (const key of Object.keys(animes[i].playlinks_year)) {
+            for (const year of animes[i].playlinks_year[key]) {
+                if (!airYear || year === Number(airYear)) {
+                    console.log(`键: ${key}, 年份: ${year}`);
+                    for (let j = 0; j <= 10; j++) {
+                        const response = await Widget.http.get(
+                            `https://api.so.360kan.com/episodeszongyi?entid=${animes[i].id}&site=${key}&y=${year}&count=20&offset=${j*20}`,
+                            {
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                                },
+                            }
+                        );
 
+                        const data = response.data;
+                        console.log("360kan zongyi response:", data);
+
+                        // 检查API返回状态
+                        if (data.msg !== "ok") {
+                            throw new Error(data.errorMessage || "API调用失败");
+                        }
+
+                        const episodeList = data.data.list;
+                        if (!episodeList) {
+                            break;
+                        }
+                        for (const episodeInfo of episodeList) {
+                            if (airDate && episodeInfo.pubdate === airDate) {
+                                playUrlList.push(episodeInfo);
+                            }
+                            if (episodeInfo.name === episodeName) {
+                                playUrl = episodeInfo.url;
+                                break
+                            }
+                        }
+                        if (playUrl) {
+                            break
+                        }
+                    }
+                }
+                if (playUrl) {
+                    break
+                }
+            }
+            if (playUrl) {
+                break
+            }
+        }
+        if (playUrl) {
+            break
+        }
+      }
+  }
+
+  if (!playUrl && playUrlList.length !== 0) {
+      playUrl = playUrlList[0].url;
   }
 
   console.log("playUrl: ", playUrl);
+
+  if (!playUrl) {
+      const count = debug === "true" ? 24 : 1;
+      return generateDanmaku("【自动链接弹幕】：没有获取到相应播放链接！", count);
+  }
 
   // 处理302场景
   // https://v.youku.com/video?vid=XNjQ4MTIwOTE2NA==&tpa=dW5pb25faWQ9MTAyMjEzXzEwMDAwNl8wMV8wMQ需要转成https://v.youku.com/v_show/id_XNjQ4MTIwOTE2NA==.html
