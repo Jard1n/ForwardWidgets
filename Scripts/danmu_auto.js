@@ -16,7 +16,7 @@
 WidgetMetadata = {
   id: "forward.auto.danmu",
   title: "自动链接弹幕",
-  version: "1.0.9",
+  version: "1.0.10",
   requiredVersion: "0.0.2",
   description: "自动获取播放链接并从服务器获取弹幕【五折码：CHEAP.5;七折码：CHEAP】",
   author: "huangxd",
@@ -32,10 +32,6 @@ WidgetMetadata = {
           value: "https://fc.lyz05.cn",
         },
         {
-          title: "56uxi",
-          value: "https://danmu.56uxi.com",
-        },
-        {
           title: "hls",
           value: "https://dmku.hls.one",
         },
@@ -46,6 +42,10 @@ WidgetMetadata = {
         {
           title: "678",
           value: "https://se.678.ooo",
+        },
+        {
+          title: "56uxi",
+          value: "https://danmu.56uxi.com",
         },
       ],
     },
@@ -217,7 +217,7 @@ async function getPlayurls(title, tmdbInfo, type, season) {
         }
         let anime_title = anime.title.replace(/<\/b>·<b>/g, '');
 
-        if (anime_title.includes(queryTitle) && anime_title.charAt(0) === queryTitle.charAt(0)) {
+        if (anime_title.includes(queryTitle) && anime.titleTxt.charAt(0) === queryTitle.charAt(0)) {
           // use space to split animeTitle
           let titleParts = anime_title.split("</b>");
           console.log(titleParts);
@@ -455,10 +455,10 @@ function printParams(seriesName, episodeName, airDate, runtime, premiereDate, se
 async function getDanmuFromUrl(danmu_server, playUrl, debug) {
     const danmu_server_list = [
         "https://fc.lyz05.cn",
-        "https://danmu.56uxi.com",
         "https://dmku.hls.one",
         "https://api.danmu.icu",
         "https://se.678.ooo",
+        "https://danmu.56uxi.com",
     ];
 
     // 统一的请求函数
@@ -689,15 +689,55 @@ function extractAndFormatDate(episodeKey) {
 }
 
 async function getPlayurlFromVod(title, tmdbInfo, type, season, episode, episodeName, airDate, platform, vod_site) {
-  const response = await Widget.http.get(
-    `${vod_site}/api.php/provide/vod/?ac=detail&wd=${title}&pg=1`,
-    {
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-      },
-    }
-  );
+  let response;
+  try {
+      response = await Widget.http.get(
+        `${vod_site}/api.php/provide/vod/?ac=detail&wd=${title}&pg=1`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+          },
+        }
+      );
+      // 请求成功，处理 response
+      console.log("请求成功:", response.data);
+  } catch (error) {
+      // 捕获错误
+      console.error("请求失败:", error.message);
+
+      const vod_sites = ["https://www.69mu.cn", "https://zy.xmm.hk"];
+
+      // 过滤掉用户指定的 vod_site
+      const filteredSites = vod_sites.filter(site => site !== vod_site);
+
+      // 如果过滤后的数组为空，返回 null 或抛出错误
+      if (filteredSites.length === 0) {
+        return null; // 或者可以抛出错误：throw new Error("No other sites available");
+      }
+
+      // 随机选择一个剩余的元素
+      const randomIndex = Math.floor(Math.random() * filteredSites.length);
+
+      try {
+          response = await Widget.http.get(
+            `${filteredSites[randomIndex]}/api.php/provide/vod/?ac=detail&wd=${title}&pg=1`,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+              },
+            }
+          );
+          // 请求成功，处理 response
+          console.log("请求成功:", response.data);
+      } catch (error) {
+          // 捕获错误
+          console.error("请求失败:", error.message);
+
+          return null;
+      }
+  }
 
   if (!response) {
     throw new Error("获取数据失败");
