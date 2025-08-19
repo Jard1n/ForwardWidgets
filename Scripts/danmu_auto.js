@@ -16,7 +16,7 @@
 WidgetMetadata = {
   id: "forward.auto.danmu",
   title: "自动链接弹幕",
-  version: "1.0.10",
+  version: "1.0.11",
   requiredVersion: "0.0.2",
   description: "自动获取播放链接并从服务器获取弹幕【五折码：CHEAP.5;七折码：CHEAP】",
   author: "huangxd",
@@ -46,6 +46,22 @@ WidgetMetadata = {
         {
           title: "56uxi",
           value: "https://danmu.56uxi.com",
+        },
+      ],
+    },
+    {
+      name: "danmu_server_polling",
+      title: "弹幕服务器轮询开关 (建议打开)",
+      type: "enumeration",
+      value: "true",
+      enumOptions: [
+        {
+            title: "开",
+            value: "true",
+        },
+        {
+            title: "关",
+            value: "false",
         },
       ],
     },
@@ -87,12 +103,36 @@ WidgetMetadata = {
       type: "input",
       placeholders: [
         {
+          title: "789",
+          value: "https://www.caiji.cyou",
+        },
+        {
+          title: "tfdh",
+          value: "https://gctf.tfdh.top",
+        },
+        {
           title: "69mu",
           value: "https://www.69mu.cn",
         },
         {
           title: "xmm",
           value: "https://zy.xmm.hk",
+        },
+      ],
+    },
+    {
+      name: "vod_site_polling",
+      title: "兜底vod站点轮询开关 (建议打开)",
+      type: "enumeration",
+      value: "true",
+      enumOptions: [
+        {
+            title: "开",
+            value: "true",
+        },
+        {
+            title: "关",
+            value: "false",
         },
       ],
     },
@@ -258,7 +298,7 @@ async function getPlayurls(title, tmdbInfo, type, season) {
 
   console.log("animes.length:", animes.length);
 
-  if (animes.length > 1 && tmdbInfo.type !== "Reality") {
+  if (animes.length >= 1 && tmdbInfo.type !== "Reality") {
     const tmdbYear = type === "tv" ? tmdbInfo.first_air_date.split("-")[0] : tmdbInfo.release_date.split("-")[0];
 
     animes = animes.filter(anime => anime.year == tmdbYear);
@@ -452,7 +492,7 @@ function printParams(seriesName, episodeName, airDate, runtime, premiereDate, se
     };
 }
 
-async function getDanmuFromUrl(danmu_server, playUrl, debug) {
+async function getDanmuFromUrl(danmu_server, playUrl, debug, danmu_server_polling) {
     const danmu_server_list = [
         "https://fc.lyz05.cn",
         "https://dmku.hls.one",
@@ -490,11 +530,13 @@ async function getDanmuFromUrl(danmu_server, playUrl, debug) {
     if (result) return result;
 
     // 如果传入的 danmu_server 不满足条件，查询 danmu_server_list 中的其他服务器
-    for (let server of danmu_server_list) {
-        if (server === danmu_server) continue;  // 如果是传入的 danmu_server，跳过
+    if (danmu_server_polling === "true") {
+        for (let server of danmu_server_list) {
+            if (server === danmu_server) continue;  // 如果是传入的 danmu_server，跳过
 
-        result = await fetchDanmu(server);
-        if (result) return result;  // 如果获取到有效弹幕，返回弹幕数据
+            result = await fetchDanmu(server);
+            if (result) return result;  // 如果获取到有效弹幕，返回弹幕数据
+        }
     }
 
     // 如果遍历完所有服务器都没有获得有效弹幕，返回默认错误信息
@@ -503,8 +545,8 @@ async function getDanmuFromUrl(danmu_server, playUrl, debug) {
 }
 
 async function getCommentsById(params) {
-  const { danmu_server, platform, vod_site, debug, commentId, seriesName, episodeName, airDate, runtime,
-      premiereDate, link, videoUrl, season, episode, tmdbId, type, title } = params;
+  const { danmu_server, danmu_server_polling, platform, vod_site, vod_site_polling, debug, commentId, seriesName,
+      episodeName, airDate, runtime, premiereDate, link, videoUrl, season, episode, tmdbId, type, title } = params;
 
   // 测试参数值
   // return printParams(seriesName, episodeName, airDate, runtime, premiereDate, season, episode, tmdbId);
@@ -523,9 +565,9 @@ async function getCommentsById(params) {
   console.log("animes.length:", animes.length);
 
   if (animes.length === 0) {
-    playUrl = await getPlayurlFromVod(title, tmdbInfo, type, season, episode, episodeName, airDate, platform, vod_site);
+    playUrl = await getPlayurlFromVod(title, tmdbInfo, type, season, episode, episodeName, airDate, platform, vod_site, vod_site_polling);
     if (playUrl) {
-        return await getDanmuFromUrl(danmu_server, playUrl, debug);
+        return await getDanmuFromUrl(danmu_server, playUrl, debug, danmu_server_polling);
     }
     if (!playUrl) {
         const count = debug === "true" ? 24 : 1;
@@ -540,9 +582,9 @@ async function getCommentsById(params) {
         if (episode - 1 >= 0 && episode - 1 < animes[0].seriesPlaylinks.length) {
             playUrl = animes[0].seriesPlaylinks[episode - 1].url;
         } else {
-            playUrl = await getPlayurlFromVod(title, tmdbInfo, type, season, episode, episodeName, airDate, platform, vod_site);
+            playUrl = await getPlayurlFromVod(title, tmdbInfo, type, season, episode, episodeName, airDate, platform, vod_site, vod_site_polling);
             if (playUrl) {
-                return await getDanmuFromUrl(danmu_server, playUrl, debug);
+                return await getDanmuFromUrl(danmu_server, playUrl, debug, danmu_server_polling);
             }
             if (!playUrl) {
                 const count = debug === "true" ? 24 : 1;
@@ -566,9 +608,9 @@ async function getCommentsById(params) {
       }
   } else {
       if (!episodeName) {
-          playUrl = await getPlayurlFromVod(title, tmdbInfo, type, season, episode, episodeName, airDate, platform, vod_site);
+          playUrl = await getPlayurlFromVod(title, tmdbInfo, type, season, episode, episodeName, airDate, platform, vod_site, vod_site_polling);
           if (playUrl) {
-              return await getDanmuFromUrl(danmu_server, playUrl, debug);
+              return await getDanmuFromUrl(danmu_server, playUrl, debug, danmu_server_polling);
           }
           if (!playUrl) {
               const count = debug === "true" ? 24 : 1;
@@ -644,9 +686,9 @@ async function getCommentsById(params) {
   console.log("playUrl: ", playUrl);
 
   if (!playUrl) {
-      playUrl = await getPlayurlFromVod(title, tmdbInfo, type, season, episode, episodeName, airDate, platform, vod_site);
+      playUrl = await getPlayurlFromVod(title, tmdbInfo, type, season, episode, episodeName, airDate, platform, vod_site, vod_site_polling);
       if (playUrl) {
-          return await getDanmuFromUrl(danmu_server, playUrl, debug);
+          return await getDanmuFromUrl(danmu_server, playUrl, debug, danmu_server_polling);
       }
       if (!playUrl) {
           const count = debug === "true" ? 24 : 1;
@@ -660,7 +702,7 @@ async function getCommentsById(params) {
       playUrl = convertYoukuUrl(playUrl);
   }
 
-  return await getDanmuFromUrl(danmu_server, playUrl, debug);
+  return await getDanmuFromUrl(danmu_server, playUrl, debug, danmu_server_polling);
 }
 
 function extractAndFormatDate(episodeKey) {
@@ -688,59 +730,74 @@ function extractAndFormatDate(episodeKey) {
     return null;
 }
 
-async function getPlayurlFromVod(title, tmdbInfo, type, season, episode, episodeName, airDate, platform, vod_site) {
+async function getPlayurlFromVod(title, tmdbInfo, type, season, episode, episodeName, airDate, platform, vod_site, vod_site_polling) {
   let response;
-  try {
-      response = await Widget.http.get(
-        `${vod_site}/api.php/provide/vod/?ac=detail&wd=${title}&pg=1`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-          },
-        }
-      );
-      // 请求成功，处理 response
-      console.log("请求成功:", response.data);
-  } catch (error) {
-      // 捕获错误
-      console.error("请求失败:", error.message);
+  const vod_sites = ["https://www.caiji.cyou", "https://gctf.tfdh.top", "https://www.69mu.cn", "https://zy.xmm.hk"];
 
-      const vod_sites = ["https://www.69mu.cn", "https://zy.xmm.hk"];
+  // 定义一个异步函数来处理单个请求
+  async function tryRequest(site, title) {
+      try {
+        const response = await Widget.http.get(
+          `${site}/api.php/provide/vod/?ac=detail&wd=${title}&pg=1`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            },
+          }
+        );
+        // 检查 response.data.list 是否存在且长度大于 0
+        if (response && response.data && response.data.list && response.data.list.length > 0) {
+          console.log(`请求 ${site} 成功`);
+          return response;
+        } else {
+          console.log(`请求 ${site} 成功，但 response.data.list 为空`);
+          return null;
+        }
+      } catch (error) {
+        console.error(`请求 ${site} 失败:`, error.message);
+        return null;
+      }
+  }
+
+  // 主逻辑
+  async function fetchVodData(vod_site, title) {
+      // 首先尝试用户指定的 vod_site
+      response = await tryRequest(vod_site, title);
+      if (response) {
+        return response;
+      }
+
+      if (vod_site_polling === "false") {
+          return null;
+      }
 
       // 过滤掉用户指定的 vod_site
       const filteredSites = vod_sites.filter(site => site !== vod_site);
 
-      // 如果过滤后的数组为空，返回 null 或抛出错误
+      // 如果没有其他服务器，返回 null
       if (filteredSites.length === 0) {
-        return null; // 或者可以抛出错误：throw new Error("No other sites available");
+        console.error("没有其他服务器可尝试");
+        return null;
       }
 
-      // 随机选择一个剩余的元素
-      const randomIndex = Math.floor(Math.random() * filteredSites.length);
-
-      try {
-          response = await Widget.http.get(
-            `${filteredSites[randomIndex]}/api.php/provide/vod/?ac=detail&wd=${title}&pg=1`,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-              },
-            }
-          );
-          // 请求成功，处理 response
-          console.log("请求成功:", response.data);
-      } catch (error) {
-          // 捕获错误
-          console.error("请求失败:", error.message);
-
-          return null;
+      // 轮询剩余的服务器
+      for (const site of filteredSites) {
+        response = await tryRequest(site, title);
+        if (response) {
+          return response; // 找到有效响应，立即返回
+        }
       }
+
+      // 所有服务器都尝试失败或返回空列表
+      console.error("所有服务器请求失败或返回空列表");
+      return null;
   }
 
+  response = await fetchVodData(vod_site, title);
+
   if (!response) {
-    throw new Error("获取数据失败");
+      return null;
   }
 
   const data = response.data;
@@ -752,11 +809,12 @@ async function getPlayurlFromVod(title, tmdbInfo, type, season, episode, episode
   if (data.list && data.list.length > 0) {
     animes = data.list.filter((anime) => {
       if ((anime.type_name === "电视剧" || anime.type_name === "动漫" || anime.type_name === "连续剧" || anime.type_name === "少儿"
+          || anime.type_name.includes("剧") || anime.type_name.includes("国创")
       ) && type === "tv" && tmdbInfo.type !== "Reality") {
         return true;
       } else if (anime.type_name === "综艺" && type === "tv" && tmdbInfo.type === "Reality") {
         return true;
-      } else if (anime.type_name === "电影" && type === "movie") {
+      } else if ((anime.type_name === "电影" || anime.type_name.includes("电影") || anime.type_name.includes("片")) && type === "movie") {
         return true;
       } else {
         return false;
@@ -767,9 +825,12 @@ async function getPlayurlFromVod(title, tmdbInfo, type, season, episode, episode
   console.log("animes.length:", animes.length);
 
   let tmdbYear;
-  if (animes.length > 1) {
+  if (animes.length >= 1) {
       if (type === "tv") {
           const targetSeason = tmdbInfo.seasons.find(s => s.season_number === Number(season));
+          if (!targetSeason) {
+              return null;
+          }
           tmdbYear = targetSeason.air_date.split("-")[0]
       } else {
           tmdbYear = tmdbInfo.release_date.split("-")[0]
@@ -843,7 +904,7 @@ async function getPlayurlFromVod(title, tmdbInfo, type, season, episode, episode
                   playUrl = episodeInfo.split("$")[1];
                   break;
               }
-              if (episodeKey === episodeName) {
+              if (episodeKey === episodeName || episodeName.includes(episodeKey)) {
                   playUrl = episodeInfo.split("$")[1];
                   break;
               }
