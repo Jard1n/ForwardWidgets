@@ -16,7 +16,7 @@
 WidgetMetadata = {
   id: "forward.auto.danmu",
   title: "自动链接弹幕",
-  version: "1.0.16",
+  version: "1.0.17",
   requiredVersion: "0.0.2",
   description: "自动获取播放链接并从服务器获取弹幕【五折码：CHEAP.5;七折码：CHEAP】",
   author: "huangxd",
@@ -70,6 +70,22 @@ WidgetMetadata = {
         {
             title: "关",
             value: "false",
+        },
+      ],
+    },
+    {
+      name: "skip360kan",
+      title: "跳过360kan站点查询播放链接 (建议关闭)",
+      type: "enumeration",
+      value: "false",
+      enumOptions: [
+        {
+            title: "关",
+            value: "false",
+        },
+        {
+            title: "开",
+            value: "true",
         },
       ],
     },
@@ -1636,7 +1652,7 @@ async function getDanmuFromUrl(danmu_server, playUrl, debug, danmu_server_pollin
 async function getCommentsById(params) {
   const { danmu_server, danmu_server_polling, platform, vod_site, vod_site_polling, debug, commentId, seriesName,
       episodeName, airDate, runtime, premiereDate, link, videoUrl, season, episode, tmdbId, type, title,
-    danmu_api_1, danmu_api_2, danmu_api_3, danmu_api_4, danmu_api_5, api_priority } = params;
+    danmu_api_1, danmu_api_2, danmu_api_3, danmu_api_4, danmu_api_5, api_priority, skip360kan } = params;
 
   // 测试参数值
   // return printParams(seriesName, episodeName, airDate, runtime, premiereDate, season, episode, tmdbId);
@@ -1659,7 +1675,10 @@ async function getCommentsById(params) {
       }
   }
 
-  const animes = await getPlayurls(title, tmdbInfo, type, season);
+  let animes = [];
+  if (skip360kan !== "true") {
+    animes = await getPlayurls(title, tmdbInfo, type, season);
+  }
   console.log("animes.length:", animes.length);
 
   if (animes.length === 0) {
