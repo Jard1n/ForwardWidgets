@@ -16,7 +16,7 @@
 WidgetMetadata = {
   id: "forward.auto.danmu",
   title: "自动链接弹幕",
-  version: "1.0.17",
+  version: "1.0.18",
   requiredVersion: "0.0.2",
   description: "自动获取播放链接并从服务器获取弹幕【五折码：CHEAP.5;七折码：CHEAP】",
   author: "huangxd",
@@ -460,6 +460,24 @@ function md5(message) {
   }
 
   return (wordToHex(a) + wordToHex(b) + wordToHex(c) + wordToHex(d)).toLowerCase();
+}
+
+function escapeXmlText(str) {
+  return str.replace(/[<>&"']/g, function (c) {
+    switch (c) {
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '&': return '&amp;';
+      case '"': return '&quot;';
+      case "'": return '&apos;';
+    }
+  });
+}
+
+function fixDTagContent(xmlStr) {
+  return xmlStr.replace(/(<d [^>]*>)([\s\S]*?)(<\/d>)/g, function (match, startTag, textContent, endTag) {
+    return startTag + escapeXmlText(textContent) + endTag;
+  });
 }
 
 function buildQueryString(params) {
@@ -1601,7 +1619,16 @@ async function getDanmuFromUrl(danmu_server, playUrl, debug, danmu_server_pollin
     // 统一的请求函数
     async function fetchDanmu(server) {
         if (server === "http://127.0.0.1") {
-            const res = await fetchLocalhost(playUrl);
+            let res = await fetchLocalhost(playUrl);
+            // 弹幕中有特殊字符会导致弹幕消失
+            res = fixDTagContent(res);
+
+            // const fs = require("fs");
+            //
+            // // 写入到文件，用于调试
+            // fs.writeFileSync("output.xml", res, "utf-8");
+            //
+            // console.log("已成功写入 output.xml");
 
             const danmuCount = parseDanmuku(res);
             return danmuCount >= 5 ? res : null; // 如果弹幕数大于等于 5，返回弹幕数据
