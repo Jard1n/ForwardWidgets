@@ -16,7 +16,7 @@
 WidgetMetadata = {
   id: "forward.auto.danmu",
   title: "自动链接弹幕",
-  version: "1.0.18",
+  version: "1.0.20",
   requiredVersion: "0.0.2",
   description: "自动获取播放链接并从服务器获取弹幕【五折码：CHEAP.5;七折码：CHEAP】",
   author: "huangxd",
@@ -512,8 +512,79 @@ function time_to_second(time) {
   return seconds;
 }
 
+async function convertMobileToPcUrl(url) {
+    /**
+     * 将移动端页面 URL 转换为 PC 端页面 URL。
+     * 支持爱奇艺、腾讯视频、优酷、芒果TV和哔哩哔哩。
+     * @param {string} url - 移动端 URL
+     * @returns {string} - PC 端 URL（匹配成功）、错误信息（匹配但解析失败）或原链接（不匹配）
+     */
+
+    // 爱奇艺 (iQIYI)
+    if (url.includes('m.iqiyi.com')) {
+        // 移动端示例: https://m.iqiyi.com/v_1ftv9n1m3bg.html
+        // PC 端示例: https://www.iqiyi.com/v_1ftv9n1m3bg.html
+        return url.replace('m.iqiyi.com', 'www.iqiyi.com');
+    }
+
+    // 腾讯视频 (Tencent Video)
+    if (url.includes('m.v.qq.com')) {
+        // 移动端示例: https://m.v.qq.com/x/m/play?cid=53q0eh78q97e4d1&vid=x00174aq5no&ptag=hippySearch&pageType=long
+        // PC 端示例: https://v.qq.com/x/cover/53q0eh78q97e4d1/x00174aq5no.html
+        const cidMatch = url.match(/cid=([a-zA-Z0-9]+)/);
+        const vidMatch = url.match(/vid=([a-zA-Z0-9]+)/);
+        if (cidMatch && vidMatch) {
+            const cid = cidMatch[1];
+            const vid = vidMatch[1];
+            return `https://v.qq.com/x/cover/${cid}/${vid}.html`;
+        } else if (vidMatch) {
+            const vid = vidMatch[1];
+            return `https://v.qq.com/x/page/${vid}.html`;
+        }
+        return "无法解析腾讯视频移动端 URL";
+    }
+
+    // 优酷 (Youku)
+    if (url.includes('m.youku.com')) {
+        // 移动端示例: https://m.youku.com/alipay_video/id_cbff0b0703e54d659628.html?spm=a2hww.12518357.drawer4.2
+        // PC 端示例: https://v.youku.com/v_show/id_cbff0b0703e54d659628.html
+
+        // 获取重定向location
+        const response = await Widget.http.get(url, {
+            headers: {
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            },
+        });
+
+        const regex = /https:\/\/v\.youku\.com\/v_show\/id_[A-Za-z0-9=]+\.html/g;
+        const matches = response.data.match(regex); // 找到所有匹配的链接
+        if (matches) {
+            return matches[0];
+        }
+
+        return "无法解析优酷移动端 URL";
+    }
+
+    // 芒果TV (Mango TV)
+    if (url.includes('m.mgtv.com')) {
+        // 移动端示例: https://m.mgtv.com/b/771610/23300622.html?fpa=0&fpos=0
+        // PC 端示例: https://www.mgtv.com/b/771610/23300622.html
+        return url.replace('m.mgtv.com', 'www.mgtv.com').replace(/\?.*$/, '');
+    }
+
+    // 哔哩哔哩 (Bilibili)
+    if (url.includes('m.bilibili.com')) {
+        // 移动端示例: https://m.bilibili.com/bangumi/play/ep1231564
+        // PC 端示例: https://www.bilibili.com/bangumi/play/ep1231564
+        return url.replace('m.bilibili.com', 'www.bilibili.com');
+    }
+
+    // 不匹配任何支持的平台，直接返回原链接
+    return url;
+}
+
 function convertToDanmakuXML(contents) {
-  let xml = '<?xml version="1.0" encoding="utf-8"?><i>';
+  let danmus = []
   for (const content of contents) {
     const attributes = [
       content.timepoint,
@@ -526,10 +597,13 @@ function convertToDanmakuXML(contents) {
       '26732601000067074',
       '1'
     ].join(',');
-    xml += `<d p="${attributes}">${content.content}</d>`;
+    danmus.push({
+      p: attributes,
+      m: content.content
+    });
   }
-  xml += '</i>';
-  return xml;
+  console.log("danmus:", danmus.length);
+  return danmus;
 }
 
 async function fetchLocalhost(inputUrl) {
@@ -759,12 +833,14 @@ async function fetchIqiyi(inputUrl) {
         //     console.error(`Fetch error for ${api_url}:`, err);
         //     return null;
         // })
-        Widget.http.get(`https://zlib-decompress.hxd.ip-ddns.com/?url=${api_url}`, {
+        // Widget.http.get(`https://zlib-decompress.hxd.ip-ddns.com/?url=${api_url}`, {
+        Widget.http.get(api_url, {
           headers: {
             "Accpet-Encoding": "gzip",
             "Content-Type": "application/xml",
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
           },
+          zlibMode: true
         })
     );
   }
@@ -786,27 +862,28 @@ async function fetchIqiyi(inputUrl) {
 
     for (let data of datas) {
         console.log("piece data: ", printFirst200Chars(data));
-        let xml;
-        // 检查数据是否需要解压
-        if (data instanceof ArrayBuffer || data instanceof Uint8Array) {
-            // 使用 DecompressionStream 解压 zlib 数据
-            const ds = new DecompressionStream("deflate"); // 修改为 zlib 的解压格式
-            const stream = new Blob([data]).stream(); // 将 ArrayBuffer 或 Uint8Array 转换为 Blob 并创建流
-            const decompressedStream = stream.pipeThrough(ds); // 解压流
-            const reader = decompressedStream.getReader();
-
-            let result = "";
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                result += new TextDecoder().decode(value); // 将解压的数据解码为文本
-            }
-            xml = result;
-        } else {
-            // 如果数据已经是字符串，直接使用
-            console.log("数据是未压缩的字符串，直接使用");
-            xml = data.data;
-        }
+        // let xml;
+        // // 检查数据是否需要解压
+        // if (data instanceof ArrayBuffer || data instanceof Uint8Array) {
+        //     // 使用 DecompressionStream 解压 zlib 数据
+        //     const ds = new DecompressionStream("deflate"); // 修改为 zlib 的解压格式
+        //     const stream = new Blob([data]).stream(); // 将 ArrayBuffer 或 Uint8Array 转换为 Blob 并创建流
+        //     const decompressedStream = stream.pipeThrough(ds); // 解压流
+        //     const reader = decompressedStream.getReader();
+        //
+        //     let result = "";
+        //     while (true) {
+        //         const { done, value } = await reader.read();
+        //         if (done) break;
+        //         result += new TextDecoder().decode(value); // 将解压的数据解码为文本
+        //     }
+        //     xml = result;
+        // } else {
+        //     // 如果数据已经是字符串，直接使用
+        //     console.log("数据是未压缩的字符串，直接使用");
+        //     xml = data.data;
+        // }
+        let xml = data.data;
 
         // 解析 XML 数据
         const danmaku = extract(xml, "content");
@@ -1302,6 +1379,675 @@ async function fetchYouku(inputUrl) {
   return convertToDanmakuXML(contents);
 }
 
+// =====================
+// 人人视频 配置 & 工具
+// =====================
+const AES_KEY = Buffer.from("3b744389882a4067", "utf8");
+const SIGN_SECRET = "ES513W0B1CsdUrR13Qk5EgDAKPeeKZY";
+const BASE_API = "https://api.rrmj.plus";
+
+const ClientProfile = {
+  client_type: "web_pc",
+  client_version: "1.0.0",
+  user_agent: "Mozilla/5.0",
+  origin: "https://rrsp.com.cn",
+  referer: "https://rrsp.com.cn/",
+};
+
+// ---------------------
+// 通用工具
+// ---------------------
+function sortedQueryString(params = {}) {
+  const normalized = {};
+  for (const [k, v] of Object.entries(params)) {
+    if (typeof v === "boolean") normalized[k] = v ? "true" : "false";
+    else if (v == null) normalized[k] = "";
+    else normalized[k] = String(v);
+  }
+
+  // 获取对象的所有键并排序
+  const keys = [];
+  for (const key in normalized) {
+    if (Object.prototype.hasOwnProperty.call(normalized, key)) {
+      keys.push(key);
+    }
+  }
+  keys.sort();
+
+  // 构建键值对数组
+  const pairs = [];
+  for (const key of keys) {
+    // 对键和值进行 URL 编码
+    const encodedKey = encodeURIComponent(key);
+    const encodedValue = encodeURIComponent(normalized[key]);
+    pairs.push(`${encodedKey}=${encodedValue}`);
+  }
+
+  // 用 & 连接所有键值对
+  return pairs.join('&');
+}
+
+function updateQueryString(url, params) {
+  // 解析 URL
+  let baseUrl = url;
+  let queryString = '';
+  const hashIndex = url.indexOf('#');
+  let hash = '';
+  if (hashIndex !== -1) {
+    baseUrl = url.substring(0, hashIndex);
+    hash = url.substring(hashIndex);
+  }
+  const queryIndex = baseUrl.indexOf('?');
+  if (queryIndex !== -1) {
+    queryString = baseUrl.substring(queryIndex + 1);
+    baseUrl = baseUrl.substring(0, queryIndex);
+  }
+
+  // 解析现有查询字符串为对象
+  const queryParams = {};
+  if (queryString) {
+    const pairs = queryString.split('&');
+    for (const pair of pairs) {
+      if (pair) {
+        const [key, value = ''] = pair.split('=').map(decodeURIComponent);
+        queryParams[key] = value;
+      }
+    }
+  }
+
+  // 更新参数
+  for (const key in params) {
+    if (Object.prototype.hasOwnProperty.call(params, key)) {
+      queryParams[key] = params[key];
+    }
+  }
+
+  // 构建新的查询字符串
+  const newQuery = [];
+  for (const key in queryParams) {
+    if (Object.prototype.hasOwnProperty.call(queryParams, key)) {
+      newQuery.push(
+        `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key])}`
+      );
+    }
+  }
+
+  // 拼接最终 URL
+  return baseUrl + (newQuery.length ? '?' + newQuery.join('&') : '') + hash;
+}
+
+function getPathname(url) {
+  // 查找路径的起始位置（跳过协议和主机部分）
+  let pathnameStart = url.indexOf('//') + 2;
+  if (pathnameStart === 1) pathnameStart = 0; // 如果没有协议部分
+  const pathStart = url.indexOf('/', pathnameStart);
+  if (pathStart === -1) return '/'; // 如果没有路径，返回默认根路径
+  const queryStart = url.indexOf('?', pathStart);
+  const hashStart = url.indexOf('#', pathStart);
+  // 确定路径的结束位置（查询字符串或片段之前）
+  let pathEnd = queryStart !== -1 ? queryStart : (hashStart !== -1 ? hashStart : url.length);
+  const pathname = url.substring(pathStart, pathEnd);
+  return pathname || '/';
+}
+
+function generateSignature(method, aliId, ct, cv, timestamp, path, sortedQuery, secret) {
+  const signStr = `${method.toUpperCase()}\naliId:${aliId}\nct:${ct}\ncv:${cv}\nt:${timestamp}\n${path}?${sortedQuery}`;
+  return createHmacSha256(secret, signStr);
+}
+
+function buildSignedHeaders({ method, url, params = {}, deviceId, token }) {
+  const pathname = getPathname(url);
+  const qs = sortedQueryString(params);
+  const nowMs = Date.now();
+  const xCaSign = generateSignature(
+    method, deviceId, ClientProfile.client_type, ClientProfile.client_version,
+    nowMs, pathname, qs, SIGN_SECRET
+  );
+  return {
+    clientVersion: ClientProfile.client_version,
+    deviceId,
+    clientType: ClientProfile.client_type,
+    t: String(nowMs),
+    aliId: deviceId,
+    umid: deviceId,
+    token: token || "",
+    cv: ClientProfile.client_version,
+    ct: ClientProfile.client_type,
+    uet: "9",
+    "x-ca-sign": xCaSign,
+    Accept: "application/json",
+    "User-Agent": ClientProfile.user_agent,
+    Origin: ClientProfile.origin,
+    Referer: ClientProfile.referer,
+  };
+}
+
+// ====================== AES-128-ECB 完整实现 ======================
+
+// S盒
+const SBOX = [
+  0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
+  0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,
+  0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71, 0xd8, 0x31, 0x15,
+  0x04, 0xc7, 0x23, 0xc3, 0x18, 0x96, 0x05, 0x9a, 0x07, 0x12, 0x80, 0xe2, 0xeb, 0x27, 0xb2, 0x75,
+  0x09, 0x83, 0x2c, 0x1a, 0x1b, 0x6e, 0x5a, 0xa0, 0x52, 0x3b, 0xd6, 0xb3, 0x29, 0xe3, 0x2f, 0x84,
+  0x53, 0xd1, 0x00, 0xed, 0x20, 0xfc, 0xb1, 0x5b, 0x6a, 0xcb, 0xbe, 0x39, 0x4a, 0x4c, 0x58, 0xcf,
+  0xd0, 0xef, 0xaa, 0xfb, 0x43, 0x4d, 0x33, 0x85, 0x45, 0xf9, 0x02, 0x7f, 0x50, 0x3c, 0x9f, 0xa8,
+  0x51, 0xa3, 0x40, 0x8f, 0x92, 0x9d, 0x38, 0xf5, 0xbc, 0xb6, 0xda, 0x21, 0x10, 0xff, 0xf3, 0xd2,
+  0xcd, 0x0c, 0x13, 0xec, 0x5f, 0x97, 0x44, 0x17, 0xc4, 0xa7, 0x7e, 0x3d, 0x64, 0x5d, 0x19, 0x73,
+  0x60, 0x81, 0x4f, 0xdc, 0x22, 0x2a, 0x90, 0x88, 0x46, 0xee, 0xb8, 0x14, 0xde, 0x5e, 0x0b, 0xdb,
+  0xe0, 0x32, 0x3a, 0x0a, 0x49, 0x06, 0x24, 0x5c, 0xc2, 0xd3, 0xac, 0x62, 0x91, 0x95, 0xe4, 0x79,
+  0xe7, 0xc8, 0x37, 0x6d, 0x8d, 0xd5, 0x4e, 0xa9, 0x6c, 0x56, 0xf4, 0xea, 0x65, 0x7a, 0xae, 0x08,
+  0xba, 0x78, 0x25, 0x2e, 0x1c, 0xa6, 0xb4, 0xc6, 0xe8, 0xdd, 0x74, 0x1f, 0x4b, 0xbd, 0x8b, 0x8a,
+  0x70, 0x3e, 0xb5, 0x66, 0x48, 0x03, 0xf6, 0x0e, 0x61, 0x35, 0x57, 0xb9, 0x86, 0xc1, 0x1d, 0x9e,
+  0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf,
+  0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16
+];
+
+// 轮常量
+const RCON = [
+  0x00,0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80,0x1b,0x36
+];
+
+// 字节异或
+function xor(a,b) {
+  const out = new Uint8Array(a.length);
+  for(let i=0;i<a.length;i++) out[i]=a[i]^b[i];
+  return out;
+}
+
+// 字循环左移
+function rotWord(word){
+  return Uint8Array.from([word[1],word[2],word[3],word[0]]);
+}
+
+// 字节代换
+function subWord(word){
+  return Uint8Array.from(word.map(b=>SBOX[b]));
+}
+
+// 扩展密钥 16 字节 -> 176 字节
+function keyExpansion(key) {
+  const Nk = 4, Nb=4, Nr=10;
+  const w = new Array(Nb*(Nr+1));
+  for(let i=0;i<Nk;i++){
+    w[i] = key.slice(4*i,4*i+4);
+  }
+  for(let i=Nk;i<Nb*(Nr+1);i++){
+    let temp = w[i-1];
+    if(i%Nk===0) temp = xor(subWord(rotWord(temp)), Uint8Array.from([RCON[i/Nk],0,0,0]));
+    w[i]=xor(w[i-Nk],temp);
+  }
+  return w;
+}
+
+// AES-128 解密单块 (16 字节)
+function aesDecryptBlock(input, w) {
+  const Nb=4, Nr=10;
+  let state = new Uint8Array(input);
+  state = addRoundKey(state, w.slice(Nr*Nb,(Nr+1)*Nb));
+  for(let round=Nr-1;round>=1;round--){
+    state = invShiftRows(state);
+    state = invSubBytes(state);
+    state = addRoundKey(state, w.slice(round*Nb,(round+1)*Nb));
+    state = invMixColumns(state);
+  }
+  state = invShiftRows(state);
+  state = invSubBytes(state);
+  state = addRoundKey(state, w.slice(0,Nb));
+  return state;
+}
+
+// AES 辅助函数
+function addRoundKey(state, w){
+  const out = new Uint8Array(16);
+  for(let c=0;c<4;c++)
+    for(let r=0;r<4;r++)
+      out[r+4*c]=state[r+4*c]^w[c][r];
+  return out;
+}
+
+function invSubBytes(state){
+  const INV_SBOX = new Array(256);
+  for(let i=0;i<256;i++) INV_SBOX[SBOX[i]]=i;
+  return Uint8Array.from(state.map(b=>INV_SBOX[b]));
+}
+
+function invShiftRows(state){
+  const out = new Uint8Array(16);
+  for(let r=0;r<4;r++)
+    for(let c=0;c<4;c++)
+      out[r+4*c]=state[r+4*((c-r+4)%4)];
+  return out;
+}
+
+function invMixColumns(state){
+  function mul(a,b){
+    let p=0;
+    for(let i=0;i<8;i++){
+      if(b&1) p^=a;
+      let hi=(a&0x80);
+      a=(a<<1)&0xFF;
+      if(hi) a^=0x1b;
+      b>>=1;
+    }
+    return p;
+  }
+  const out = new Uint8Array(16);
+  for(let c=0;c<4;c++){
+    const col = state.slice(4*c,4*c+4);
+    out[4*c+0]=mul(col[0],0x0e)^mul(col[1],0x0b)^mul(col[2],0x0d)^mul(col[3],0x09);
+    out[4*c+1]=mul(col[0],0x09)^mul(col[1],0x0e)^mul(col[2],0x0b)^mul(col[3],0x0d);
+    out[4*c+2]=mul(col[0],0x0d)^mul(col[1],0x09)^mul(col[2],0x0e)^mul(col[3],0x0b);
+    out[4*c+3]=mul(col[0],0x0b)^mul(col[1],0x0d)^mul(col[2],0x09)^mul(col[3],0x0e);
+  }
+  return out;
+}
+
+// ====================== ECB 模式解密 ======================
+function aesDecryptECB(cipherBytes, keyBytes){
+  const w = keyExpansion(keyBytes);
+  const blockSize = 16;
+  const result = new Uint8Array(cipherBytes.length);
+  for(let i=0;i<cipherBytes.length;i+=blockSize){
+    const block = cipherBytes.slice(i,i+blockSize);
+    const decrypted = aesDecryptBlock(block,w);
+    result.set(decrypted,i);
+  }
+  return result;
+}
+
+// ====================== PKCS#7 去填充 ======================
+function pkcs7Unpad(data){
+  const pad = data[data.length-1];
+  return data.slice(0,data.length-pad);
+}
+
+// ====================== Base64 解码 ======================
+function base64ToBytes(b64){
+  return Uint8Array.from(atob(b64), c=>c.charCodeAt(0));
+}
+
+// ====================== 主函数 ======================
+function aesDecryptBase64(cipherB64,keyStr){
+  try{
+    const cipherBytes = base64ToBytes(cipherB64);
+    const keyBytes = new TextEncoder().encode(keyStr);
+    const decryptedBytes = aesDecryptECB(cipherBytes,keyBytes);
+    const unpadded = pkcs7Unpad(decryptedBytes);
+    return new TextDecoder().decode(unpadded);
+  }catch(e){
+    console.error(e);
+    return null;
+  }
+}
+
+function autoDecode(anything) {
+  const text = typeof anything === "string" ? anything.trim() : JSON.stringify(anything ?? "");
+  try { return JSON.parse(text); } catch {}
+  const dec = aesDecryptBase64(text, AES_KEY);
+  if (dec != null) {
+    try { return JSON.parse(dec); } catch { return dec; }
+  }
+  return text;
+}
+
+function str2bytes(str) {
+    const bytes = [];
+    for (let i = 0; i < str.length; i++) {
+        let code = str.charCodeAt(i);
+        if (code < 0x80) {
+            bytes.push(code);
+        } else if (code < 0x800) {
+            bytes.push(0xc0 | (code >> 6));
+            bytes.push(0x80 | (code & 0x3f));
+        } else if (code < 0x10000) {
+            bytes.push(0xe0 | (code >> 12));
+            bytes.push(0x80 | ((code >> 6) & 0x3f));
+            bytes.push(0x80 | (code & 0x3f));
+        }
+    }
+    return bytes;
+}
+
+// ===================== Base64 编码 =====================
+function bytesToBase64(bytes) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    let result = '';
+    let i;
+    for (i = 0; i + 2 < bytes.length; i += 3) {
+        result += chars[bytes[i] >> 2];
+        result += chars[((bytes[i] & 3) << 4) | (bytes[i + 1] >> 4)];
+        result += chars[((bytes[i + 1] & 15) << 2) | (bytes[i + 2] >> 6)];
+        result += chars[bytes[i + 2] & 63];
+    }
+    if (i < bytes.length) {
+        result += chars[bytes[i] >> 2];
+        if (i + 1 < bytes.length) {
+            result += chars[((bytes[i] & 3) << 4) | (bytes[i + 1] >> 4)];
+            result += chars[(bytes[i + 1] & 15) << 2];
+            result += '=';
+        } else {
+            result += chars[(bytes[i] & 3) << 4];
+            result += '==';
+        }
+    }
+    return result;
+}
+
+// ===================== SHA256 算法 =====================
+// 纯 JS SHA256，返回字节数组
+function sha256(ascii) {
+    function rightRotate(n, x) { return (x >>> n) | (x << (32 - n)); }
+
+    let maxWord = Math.pow(2, 32);
+    let words = [], asciiBitLength = ascii.length * 8;
+
+    for (let i = 0; i < ascii.length; i++) {
+        words[i >> 2] |= ascii.charCodeAt(i) << ((3 - i) % 4 * 8);
+    }
+
+    words[ascii.length >> 2] |= 0x80 << ((3 - ascii.length % 4) * 8);
+    words[((ascii.length + 8) >> 6) * 16 + 15] = asciiBitLength;
+
+    let w = new Array(64), hash = [
+        0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
+        0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
+    ];
+
+    const k = [
+        0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+        0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+        0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+        0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+        0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+        0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+        0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+        0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
+    ];
+
+    for (let j = 0; j < words.length; j += 16) {
+        let a = hash[0], b = hash[1], c = hash[2], d = hash[3],
+            e = hash[4], f = hash[5], g = hash[6], h = hash[7];
+
+        for (let i = 0; i < 64; i++) {
+            if (i < 16) w[i] = words[j + i] | 0;
+            else {
+                const s0 = rightRotate(7, w[i-15]) ^ rightRotate(18, w[i-15]) ^ (w[i-15]>>>3);
+                const s1 = rightRotate(17, w[i-2]) ^ rightRotate(19, w[i-2]) ^ (w[i-2]>>>10);
+                w[i] = (w[i-16] + s0 + w[i-7] + s1) | 0;
+            }
+            const S1 = rightRotate(6, e) ^ rightRotate(11, e) ^ rightRotate(25, e);
+            const ch = (e & f) ^ (~e & g);
+            const temp1 = (h + S1 + ch + k[i] + w[i]) | 0;
+            const S0 = rightRotate(2, a) ^ rightRotate(13, a) ^ rightRotate(22, a);
+            const maj = (a & b) ^ (a & c) ^ (b & c);
+            const temp2 = (S0 + maj) | 0;
+
+            h = g; g = f; f = e; e = (d + temp1) | 0;
+            d = c; c = b; b = a; a = (temp1 + temp2) | 0;
+        }
+
+        hash[0] = (hash[0] + a) | 0;
+        hash[1] = (hash[1] + b) | 0;
+        hash[2] = (hash[2] + c) | 0;
+        hash[3] = (hash[3] + d) | 0;
+        hash[4] = (hash[4] + e) | 0;
+        hash[5] = (hash[5] + f) | 0;
+        hash[6] = (hash[6] + g) | 0;
+        hash[7] = (hash[7] + h) | 0;
+    }
+
+    // 转为字节数组
+    const bytes = [];
+    for (let h of hash) {
+        bytes.push((h >> 24) & 0xFF);
+        bytes.push((h >> 16) & 0xFF);
+        bytes.push((h >> 8) & 0xFF);
+        bytes.push(h & 0xFF);
+    }
+    return bytes;
+}
+
+// ===================== HMAC-SHA256 =====================
+function createHmacSha256(key, message) {
+    const blockSize = 64; // 512 bit
+    let keyBytes = str2bytes(key);
+    if (keyBytes.length > blockSize) keyBytes = sha256(key);
+    if (keyBytes.length < blockSize) keyBytes = keyBytes.concat(Array(blockSize - keyBytes.length).fill(0));
+
+    const oKeyPad = keyBytes.map(b => b ^ 0x5c);
+    const iKeyPad = keyBytes.map(b => b ^ 0x36);
+
+    const innerHash = sha256(String.fromCharCode(...iKeyPad) + message);
+    const hmacBytes = sha256(String.fromCharCode(...oKeyPad) + String.fromCharCode(...innerHash));
+
+    return bytesToBase64(hmacBytes);
+}
+
+async function httpGet(url, { params = {}, headers = {} } = {}) {
+  const u = updateQueryString(url, params)
+  const resp = await Widget.http.get(u, {
+      headers: headers,
+  });
+  return resp;
+}
+
+// =====================
+// RenrenScraper 类
+// =====================
+class RenrenScraper {
+  constructor() {
+    this.providerName = "renren";
+    this.referer = "https://rrsp.com.cn/";
+    this._lastRequestTime = 0;
+    this._minInterval = 400; // ms
+    this._apiLock = false; // 简单锁
+  }
+
+  _generateDeviceId() {
+    return (Math.random().toString(36).slice(2)).toUpperCase();
+  }
+
+  async _request(method, url, params = {}) {
+    const deviceId = this._generateDeviceId();
+    const headers = buildSignedHeaders({ method, url, params, deviceId });
+    const resp = await fetch(url + "?" + sortedQueryString(params), { method, headers });
+    const text = await resp.text();
+    return { status: resp.status, ok: resp.ok, text };
+  }
+
+  // ---------------------
+  // 搜索
+  // ---------------------
+  async search(keyword, episodeInfo = null) {
+    const parsedKeyword = { title: keyword, season: null }; // 简化 parse_search_keyword
+    const searchTitle = parsedKeyword.title;
+    const searchSeason = parsedKeyword.season;
+
+    let allResults = await this._performNetworkSearch(searchTitle, episodeInfo);
+
+    if (searchSeason == null) return allResults;
+
+    // 按 season 过滤
+    return allResults.filter(r => r.season === searchSeason);
+  }
+
+  async _performNetworkSearch(keyword, episodeInfo = null) {
+    const url = `${BASE_API}/m-station/search/drama`;
+    const params = { keywords: keyword, size: 20, order: "match", search_after: "", isExecuteVipActivity: true };
+
+    // 简单锁实现
+    while (this._apiLock) await new Promise(r=>setTimeout(r,50));
+    this._apiLock = true;
+
+    const now = Date.now();
+    const dt = now - this._lastRequestTime;
+    if (dt < this._minInterval) await new Promise(r=>setTimeout(r, this._minInterval - dt));
+    const resp = await this._request("GET", url, params);
+    this._lastRequestTime = Date.now();
+    this._apiLock = false;
+
+    if (!resp.ok) return [];
+
+    const decoded = autoDecode(resp.text);
+    const list = decoded?.data?.searchDramaList || [];
+    return list.map((item, idx) => ({
+      provider: this.providerName,
+      mediaId: String(item.id),
+      title: String(item.title || "").replace(/<[^>]+>/g, "").replace(/:/g, "："),
+      type: "tv_series",
+      season: null,
+      year: item.year,
+      imageUrl: item.cover,
+      episodeCount: item.episodeTotal,
+      currentEpisodeIndex: episodeInfo?.episode ?? null,
+    }));
+  }
+
+  // ---------------------
+  // URL信息提取
+  // ---------------------
+  async getInfoFromUrl(url) {
+    const m = String(url).match(/\/v\/(\d+)/);
+    if (!m) return null;
+    const dramaId = m[1];
+    const detail = await this._fetchDramaDetail(dramaId);
+    if (!detail) return null;
+    const titleClean = String(detail.dramaInfo.title).replace(/<[^>]+>/g,"").replace(/:/g,"：");
+    const searchResults = await this.search(titleClean);
+    const bestMatch = searchResults.find(r=>r.mediaId===dramaId);
+    if (bestMatch && !bestMatch.episodeCount) bestMatch.episodeCount = (detail.episodeList?.length || 0);
+    if (bestMatch) return bestMatch;
+    return {
+      provider: this.providerName,
+      mediaId: dramaId,
+      title: titleClean,
+      type: "tv_series",
+      season: null,
+      episodeCount: (detail.episodeList?.length || null)
+    };
+  }
+
+  async getIdFromUrl(url) {
+    const m = String(url).match(/\/v\/\d+\/(\d+)/);
+    return m ? m[1] : null;
+  }
+
+  formatEpisodeIdForComments(providerEpisodeId) {
+    return String(providerEpisodeId);
+  }
+
+  async _fetchDramaDetail(dramaId) {
+    const url = `${BASE_API}/m-station/drama/page`;
+    const params = { hsdrOpen:0,isAgeLimit:0,dramaId:String(dramaId),hevcOpen:1 };
+    const resp = await this._request("GET", url, params);
+    if (!resp.ok) return null;
+    const decoded = autoDecode(resp.text);
+    return decoded?.data || null;
+  }
+
+  async _episodeCountFromSid(dramaId) {
+    const detail = await this._fetchDramaDetail(dramaId);
+    if (!detail || !detail.episodeList) return null;
+    return detail.episodeList.filter(ep => String(ep.sid).trim()).length;
+  }
+
+  async getEpisodes(mediaId, targetEpisodeIndex=null, dbMediaType=null) {
+    const detail = await this._fetchDramaDetail(mediaId);
+    if (!detail || !detail.episodeList) return [];
+
+    let episodes = [];
+    detail.episodeList.forEach((ep, idx)=>{
+      const sid = String(ep.sid || "").trim();
+      if(!sid) return;
+      const title = String(ep.title || `第${idx+1}`.padStart(2,"0")+"集");
+      episodes.push({ sid, order: idx+1, title });
+    });
+
+    if(targetEpisodeIndex) episodes = episodes.filter(e=>e.order===targetEpisodeIndex);
+
+    return episodes.map(e=>({
+      provider: this.providerName,
+      episodeId: e.sid,
+      title: e.title,
+      episodeIndex: e.order,
+      url: null
+    }));
+  }
+
+  async _fetchEpisodeDanmu(sid) {
+    const url = `https://static-dm.rrmj.plus/v1/produce/danmu/EPISODE/${sid}`;
+    const headers = {
+      "Accept": "application/json",
+      "User-Agent": ClientProfile.user_agent,
+      "Origin": ClientProfile.origin,
+      "Referer": ClientProfile.referer,
+    };
+    const resp = await httpGet(url, { headers });
+    if (!resp.data) return null;
+    const data = autoDecode(resp.data);
+    if (Array.isArray(data)) return data;
+    if (data?.data && Array.isArray(data.data)) return data.data;
+    return null;
+  }
+
+  _parseRRSPPFields(pField) {
+    const parts = String(pField).split(",");
+    const num = (i, cast, dft) => { try { return cast(parts[i]); } catch { return dft; } };
+    const timestamp = num(0, parseFloat, 0);
+    const mode = num(1, x=>parseInt(x,10),1);
+    const size = num(2, x=>parseInt(x,10),25);
+    const color = num(3, x=>parseInt(x,10),16777215);
+    const userId = parts[6] || "";
+    const contentId = parts[7] || `${timestamp}:${userId}`;
+    return { timestamp, mode, size, color, userId, contentId };
+  }
+
+  _formatComments(items) {
+    const unique = {};
+    for(const it of items){
+      const text = String(it.d||"");
+      const meta = this._parseRRSPPFields(it.p);
+      if(!unique[meta.contentId]) unique[meta.contentId] = { content: text, ...meta };
+    }
+
+    const grouped = {};
+    for(const c of Object.values(unique)){
+      if(!grouped[c.content]) grouped[c.content] = [];
+      grouped[c.content].push(c);
+    }
+
+    const processed = [];
+    for(const [content, group] of Object.entries(grouped)){
+      if(group.length===1) processed.push(group[0]);
+      else{
+        const first = group.reduce((a,b)=>a.timestamp<b.timestamp?a:b);
+        processed.push({...first, content:`${first.content} X${group.length}`});
+      }
+    }
+
+    return processed.map(c=>({
+      cid: c.contentId,
+      p: `${c.timestamp.toFixed(2)},${c.mode},${c.color},[${this.providerName}]`,
+      m: c.content,
+      t: c.timestamp
+    }));
+  }
+
+  async getComments(episodeId, progressCallback=null){
+    if(progressCallback) await progressCallback(5,"开始获取弹幕人人弹幕");
+    console.log("开始获取弹幕人人弹幕");
+    const raw = await this._fetchEpisodeDanmu(episodeId);
+    if(progressCallback) await progressCallback(85,`原始弹幕 ${raw.length} 条，正在规范化`);
+    console.log(`原始弹幕 ${raw.length} 条，正在规范化`);
+    const formatted = this._formatComments(raw);
+    if(progressCallback) await progressCallback(100,`弹幕处理完成，共 ${formatted.length} 条`);
+    console.log(`弹幕处理完成，共 ${formatted.length} 条`);
+    return formatted;
+  }
+}
+
 async function fetchTmdbData(id, type) {
     const tmdbResult = await Widget.tmdb.get(`/${type}/${id}`, {
         headers: {
@@ -1621,7 +2367,7 @@ async function getDanmuFromUrl(danmu_server, playUrl, debug, danmu_server_pollin
         if (server === "http://127.0.0.1") {
             let res = await fetchLocalhost(playUrl);
             // 弹幕中有特殊字符会导致弹幕消失
-            res = fixDTagContent(res);
+            // res = fixDTagContent(res);
 
             // const fs = require("fs");
             //
@@ -1676,6 +2422,51 @@ async function getDanmuFromUrl(danmu_server, playUrl, debug, danmu_server_pollin
     return generateDanmaku(`【自动链接弹幕】：弹幕服务器异常，轮询后还是未获得到有效弹幕`, count);
 }
 
+async function getDanmuFromRenRen(title, tmdbInfo, type, season, episode, episodeName) {
+  // 还有点问题，先跳过
+  return null;
+
+  const scraper = new RenrenScraper();
+  const results = await scraper.search(title);
+  console.log("人人视频搜索结果：", results);
+
+  let animes = results.filter(s => s.title.includes(title));
+
+  let tmdbYear;
+  if (animes.length >= 1) {
+      if (type === "tv") {
+          const targetSeason = tmdbInfo.seasons.find(s => s.season_number === Number(season));
+          if (!targetSeason) {
+              return null;
+          }
+          tmdbYear = targetSeason.air_date.split("-")[0]
+      } else {
+          tmdbYear = tmdbInfo.release_date.split("-")[0]
+      }
+      console.log("tmdbYear: ", tmdbYear);
+
+      animes = animes.filter(anime => anime.year == tmdbYear);
+  }
+
+  if (animes.length === 0) {
+      return null;
+  }
+
+  if(animes.length > 0){
+    const eps = await scraper.getEpisodes(animes[0].mediaId);
+    console.log("人人视频分集：", eps);
+
+    if (eps.length === 0 || eps.length < episode) {
+      return null;
+    }
+
+    const danmus = await scraper.getComments(eps[episode-1].episodeId);
+    console.log("弹幕前10：", danmus.slice(0,10));
+
+    return danmus;
+  }
+}
+
 async function getCommentsById(params) {
   const { danmu_server, danmu_server_polling, platform, vod_site, vod_site_polling, debug, commentId, seriesName,
       episodeName, airDate, runtime, premiereDate, link, videoUrl, season, episode, tmdbId, type, title,
@@ -1683,6 +2474,17 @@ async function getCommentsById(params) {
 
   // 测试参数值
   // return printParams(seriesName, episodeName, airDate, runtime, premiereDate, season, episode, tmdbId);
+
+  // 手动链接弹幕模块逻辑迁移到这
+  const urlRegex = /^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,6}(:\d+)?(\/[^\s]*)?$/;
+  if (urlRegex.test(title)) {
+      console.log("原始播放链接：", title);
+      const url = await convertMobileToPcUrl(title);
+      if (urlRegex.test(title)) {
+          console.log("转换后播放链接：", url);
+          return await getDanmuFromUrl(danmu_server, url, debug, danmu_server_polling);
+      }
+  }
 
   if (typeof tmdbId === 'undefined') {
     const count = debug === "true" ? 24 : 1;
@@ -1714,6 +2516,12 @@ async function getCommentsById(params) {
         return await getDanmuFromUrl(danmu_server, playUrl, debug, danmu_server_polling);
     }
     if (!playUrl && api_priority === "false") {
+        const renrenDanmu = await getDanmuFromRenRen(title, tmdbInfo, type, season, episode, episodeName);
+        if (renrenDanmu) {
+          return renrenDanmu;
+        }
+    }
+    if (!playUrl && api_priority === "false") {
         const result = await getDanmuFromAPI(title, tmdbInfo, type, season, episode, episodeName, airDate,
             danmu_api_1, danmu_api_2, danmu_api_3, danmu_api_4, danmu_api_5);
         if (result) {
@@ -1736,6 +2544,12 @@ async function getCommentsById(params) {
             playUrl = await getPlayurlFromVod(title, tmdbInfo, type, season, episode, episodeName, airDate, platform, vod_site, vod_site_polling);
             if (playUrl) {
                 return await getDanmuFromUrl(danmu_server, playUrl, debug, danmu_server_polling);
+            }
+            if (!playUrl && api_priority === "false") {
+                const renrenDanmu = await getDanmuFromRenRen(title, tmdbInfo, type, season, episode, episodeName);
+                if (renrenDanmu) {
+                  return renrenDanmu;
+                }
             }
             if (!playUrl && api_priority === "false") {
                 const result = await getDanmuFromAPI(title, tmdbInfo, type, season, episode, episodeName, airDate,
@@ -1769,6 +2583,12 @@ async function getCommentsById(params) {
           playUrl = await getPlayurlFromVod(title, tmdbInfo, type, season, episode, episodeName, airDate, platform, vod_site, vod_site_polling);
           if (playUrl) {
               return await getDanmuFromUrl(danmu_server, playUrl, debug, danmu_server_polling);
+          }
+          if (!playUrl && api_priority === "false") {
+              const renrenDanmu = await getDanmuFromRenRen(title, tmdbInfo, type, season, episode, episodeName);
+              if (renrenDanmu) {
+                return renrenDanmu;
+              }
           }
           if (!playUrl && api_priority === "false") {
               const result = await getDanmuFromAPI(title, tmdbInfo, type, season, episode, episodeName, airDate,
@@ -1856,7 +2676,13 @@ async function getCommentsById(params) {
       if (playUrl) {
           return await getDanmuFromUrl(danmu_server, playUrl, debug, danmu_server_polling);
       }
-        if (!playUrl && api_priority === "false") {
+      if (!playUrl && api_priority === "false") {
+          const renrenDanmu = await getDanmuFromRenRen(title, tmdbInfo, type, season, episode, episodeName);
+          if (renrenDanmu) {
+            return renrenDanmu;
+          }
+      }
+      if (!playUrl && api_priority === "false") {
           const result = await getDanmuFromAPI(title, tmdbInfo, type, season, episode, episodeName, airDate,
               danmu_api_1, danmu_api_2, danmu_api_3, danmu_api_4, danmu_api_5);
           if (result) {
