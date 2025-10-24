@@ -1,4 +1,4 @@
-// 引用地址：https://raw.githubusercontent.com/opix-maker/Forward/refs/heads/main/js/Bangumi.js
+// 引用：https://raw.githubusercontent.com/opix-maker/Forward/refs/heads/main/js/Bangumi.js
 // --- 核心配置 ---
 const STATIC_DATA_URL = "https://raw.githubusercontent.com/opix-maker/Forward/refs/heads/main/precomputed_data.json"; // 
 
