@@ -1,4 +1,4 @@
-// 引用地址：https://raw.githubusercontent.com/quantumultxx/FW-Widgets/refs/heads/main/Widgets/jable.js
+// 引用：https://raw.githubusercontent.com/quantumultxx/FW-Widgets/refs/heads/main/Widgets/jable.js
 WidgetMetadata = {
   id: "jable",
   title: "Jable",
