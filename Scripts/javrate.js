@@ -1,4 +1,4 @@
-// 引用地址：https://gist.githubusercontent.com/bemarkt/17e04f66b772d4ab9ab839c12a8ad608/raw/javrate.js
+// 引用：https://gist.githubusercontent.com/bemarkt/17e04f66b772d4ab9ab839c12a8ad608/raw/javrate.js
 var WidgetMetadata = {
   id: "ti.bemarkt.javrate",
   title: "JAVRate",
