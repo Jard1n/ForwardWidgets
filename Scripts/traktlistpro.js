@@ -49,7 +49,7 @@ WidgetMetadata = {
                     belongTo: { paramName: "section", value: ["updates"] },
                     enumOptions: [
                         { title: "🔜 从今天往后", value: "future_first" },
-                        { title: "🔄 按更新倒序", value: "air_date_desc" },
+                        { title: "🔄 按更新时间排序", value: "air_date_desc" },
                         { title: "👁️ 按观看倒序", value: "watched_at" }
                     ]
                 },
@@ -148,7 +148,7 @@ async function loadUpdatesLogic(user, id, sort, page) {
 
         const valid = enrichedShows.filter(Boolean);
         
-        // --- 排序逻辑 ---
+        // --- 排序逻辑修改 ---
         if (sort === "future_first") {
             const futureShows = valid.filter(s => s.isFuture && s.tmdb.next_episode_to_air);
             const pastShows = valid.filter(s => !s.isFuture || !s.tmdb.next_episode_to_air);
@@ -157,7 +157,9 @@ async function loadUpdatesLogic(user, id, sort, page) {
             valid.length = 0; 
             valid.push(...futureShows, ...pastShows);
         } else if (sort === "air_date_desc") {
-            valid.sort((a, b) => new Date(b.sortDate) - new Date(a.sortDate));
+            // 🔄 修改点 1：将倒序改为正序 (a - b)
+            // 效果：01-31 -> 02-01 -> 02-02
+            valid.sort((a, b) => new Date(a.sortDate) - new Date(b.sortDate));
         } else {
             valid.sort((a, b) => new Date(b.watchedDate) - new Date(a.watchedDate));
         }
@@ -168,29 +170,36 @@ async function loadUpdatesLogic(user, id, sort, page) {
             
             // === 💡 UI 优化核心 ===
             let displayStr = "暂无排期";
-            let icon = "📅";
             let epData = null;
-
+            let statusSuffix = "";
+            
+            // 🔄 修改点 2：找回了缺失的数据赋值逻辑
             if (d.next_episode_to_air) {
-                icon = "🔜";
+                // 如果有下一集，显示下一集
                 epData = d.next_episode_to_air;
             } else if (d.last_episode_to_air) {
-                icon = "📅";
+                // 如果没有下一集，显示上一集
                 epData = d.last_episode_to_air;
             }
 
+            // 状态判断
+            if (d.status === "Ended" || d.status === "Canceled") {
+                statusSuffix = " (全剧终)";
+            } else if (!d.next_episode_to_air && d.last_episode_to_air) {
+                // 没有下一集，只有上一集，通常意味着本季完结或休刊
+                statusSuffix = " (本季完)";
+            }
+            
+            // 拼接最终字符串
             if (epData) {
-                // 格式：🔜 01-30 📺 S01E04
                 const shortDate = formatShortDate(epData.air_date);
-                displayStr = `${icon} ${shortDate} 📺 S${epData.season_number}E${epData.episode_number}`;
+                displayStr = `${shortDate} · S${epData.season_number}E${epData.episode_number}${statusSuffix}`;
             }
 
             // 特殊：如果是按观看时间排序
             if (sort === "watched_at") {
-                const watchShort = formatShortDate(item.watchedDate.split('T')[0]);
-                // 如果你希望在观看历史模式也显示更新信息，保持上面的 displayStr
-                // 如果希望显示观看时间，可以取消下面注释：
-                // displayStr = `👁️ ${watchShort} 看过`;
+                // const watchShort = formatShortDate(item.watchedDate.split('T')[0]);
+                // displayStr = `👁️ ${watchShort} 看过`; 
             }
             
             return {
@@ -199,7 +208,6 @@ async function loadUpdatesLogic(user, id, sort, page) {
                 type: "tmdb", 
                 mediaType: "tv",
                 title: d.name, 
-                // 强制双位置显示，确保万无一失
                 genreTitle: displayStr, 
                 subTitle: displayStr,
                 posterPath: d.poster_path ? `https://image.tmdb.org/t/p/w500${d.poster_path}` : "",
