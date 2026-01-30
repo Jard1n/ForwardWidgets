@@ -1,4 +1,4 @@
-// 引用地址：https://raw.githubusercontent.com/MakkaPakka518/ForwardWidgets/refs/heads/main/widgets/traktlistpro.js
+// 引用：https://raw.githubusercontent.com/MakkaPakka518/ForwardWidgets/refs/heads/main/widgets/traktlistpro.js
 WidgetMetadata = {
     id: "trakt_personal_mixed",
     title: "Trak 追剧日历&个人中心",
