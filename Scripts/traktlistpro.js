@@ -198,8 +198,8 @@ async function loadUpdatesLogic(user, id, sort, page) {
 
             // 特殊：如果是按观看时间排序
             if (sort === "watched_at") {
-                // const watchShort = formatShortDate(item.watchedDate.split('T')[0]);
-                // displayStr = `👁️ ${watchShort} 看过`; 
+                const watchShort = formatShortDate(item.watchedDate.split('T')[0]);
+                displayStr = `👁️ ${watchShort} 看过`; 
             }
             
             return {
