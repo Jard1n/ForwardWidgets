@@ -4,7 +4,7 @@ WidgetMetadata = {
     title: "Trak 追剧日历&个人中心",
     author: "𝙈𝙖𝙠𝙠𝙖𝙋𝙖𝙠𝙠𝙖",
     description: "追剧日历:显示你观看剧集最新集的 更新时间&Trakt 待看/收藏/历史。",
-    version: "1.0.9",
+    version: "1.1.0",
     requiredVersion: "0.0.1",
     site: "https://trakt.tv",
 
@@ -60,13 +60,14 @@ WidgetMetadata = {
 // 0. 工具函数
 // ==========================================
 
-// 格式化日期 MM-30
+// 修改点1：格式化日期为 dd-MM-yy (例如 26-01-30)
 function formatShortDate(dateStr) {
     if (!dateStr) return "待定";
     const date = new Date(dateStr);
-    const m = (date.getMonth() + 1).toString().padStart(2, '0');
     const d = date.getDate().toString().padStart(2, '0');
-    return `${m}-${d}`;
+    const m = (date.getMonth() + 1).toString().padStart(2, '0');
+    const y = date.getFullYear().toString().slice(-2); // 获取年份后两位
+    return `${d}-${m}-${y}`;
 }
 
 // ==========================================
@@ -86,7 +87,6 @@ async function loadTraktProfile(params = {}) {
     // === B. 常规列表 (历史/待看/收藏) ===
     let rawItems = [];
     const sortType = "added,desc";
-    // 历史记录按观看时间倒序
     const historySort = section === "history" ? "watched_at,desc" : sortType;
 
     if (type === "all") {
@@ -111,7 +111,7 @@ async function loadTraktProfile(params = {}) {
         let subInfo = "";
         const timeStr = getItemTime(item, section);
 
-        // --- 核心修改：生成历史记录字符串 ---
+        // 修改点2：更新显示格式
         if (section === "history") {
             const watchShort = formatShortDate(timeStr.split('T')[0]);
             let watchedEpInfo = "";
@@ -123,11 +123,10 @@ async function loadTraktProfile(params = {}) {
                 watchedEpInfo = ` · S${s}E${e}`;
             }
             
-            // 最终字符串：👁️ 05-20 看过 · S01E02
+            // 最终字符串：👁️ 26-01-30 看过 · S01E02
             subInfo = `👁️ ${watchShort} 看过${watchedEpInfo}`;
 
         } else {
-            // 其他列表逻辑
             if (timeStr) subInfo = timeStr.split('T')[0];
             if (type === "all") subInfo = `[${item.show ? "剧" : "影"}] ${subInfo}`;
         }
@@ -230,15 +229,12 @@ async function fetchTraktList(section, type, sort, page, user, id) {
     } catch (e) { return []; }
 }
 
-// === 核心修改：强制覆盖 genreTitle 以便在UI上显示 ===
 async function fetchTmdbDetail(id, type, subInfo, originalTitle) {
     try {
         const d = await Widget.tmdb.get(`/${type}/${id}`, { params: { language: "zh-CN" } });
-        // 原始年份
         const year = (d.first_air_date || d.release_date || "").substring(0, 4);
         
-        // UI 显示逻辑：如果 subInfo 包含 "👁️" (历史) 或 "更新" (日历)，就用 subInfo 替换 年份(genreTitle)
-        // 否则显示年份
+        // UI 显示逻辑：优先显示 subInfo (观看历史/日历时间)，否则显示年份
         let displayGenre = year;
         if (subInfo && (subInfo.includes("👁️") || subInfo.includes("更新") || subInfo.includes("·"))) {
             displayGenre = subInfo;
@@ -251,7 +247,7 @@ async function fetchTmdbDetail(id, type, subInfo, originalTitle) {
             mediaType: type,
             title: d.name || d.title || originalTitle,
             
-            // 这里将显示: "👁️ 05-20 看过 · S02E14"
+            // 确保这里使用更新后的 displayGenre
             genreTitle: displayGenre, 
             
             subTitle: subInfo, 
