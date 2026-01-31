@@ -4,7 +4,7 @@ WidgetMetadata = {
     title: "Trak 追剧日历&个人中心",
     author: "𝙈𝙖𝙠𝙠𝙖𝙋𝙖𝙠𝙠𝙖",
     description: "追剧日历:显示你观看剧集最新集的 更新时间&Trakt 待看/收藏/历史。",
-    version: "1.1.7",
+    version: "1.1.8",
     requiredVersion: "0.0.1",
     site: "https://trakt.tv",
 
@@ -198,21 +198,25 @@ async function loadUpdatesLogic(user, id, sort, page) {
                 displayStr = `${shortDate} · S${epData.season_number}E${epData.episode_number}${statusSuffix}`;
             }
 
-            // 清理字符串，确保没有多余空格
             displayStr = String(displayStr).trim();
 
             return {
                 id: String(d.id), 
                 tmdbId: d.id, 
+                // 关键点：保持 tmdb 类型以便获取海报等原生支持，
+                // 但通过字段控制来模拟 zhuijurili.js 的效果
                 type: "tmdb", 
                 mediaType: "tv",
                 title: String(d.name).trim(),
                 
-                // 恢复使用 genreTitle 确保显示
-                genreTitle: displayStr, 
+                // 核心修改：完全置为 null，强迫 Forward 渲染 subTitle
+                genreTitle: null, 
                 
-                // 同时赋值 subTitle 作为备份
-                subTitle: displayStr, 
+                // 核心修改：确保这里有值
+                subTitle: displayStr,
+                
+                // 额外保险：zhuijurili.js 有时会用到 label
+                label: displayStr,
                 
                 posterPath: d.poster_path ? `https://image.tmdb.org/t/p/w500${d.poster_path}` : "",
                 description: `上次观看: ${item.watchedDate.split("T")[0]}\n${d.overview}`
@@ -252,10 +256,11 @@ async function fetchTmdbDetail(id, type, subInfo, originalTitle) {
             mediaType: type,
             title: String(d.name || d.title || originalTitle).trim(),
             
-            // 恢复使用 genreTitle
-            genreTitle: displayGenre, 
+            // 核心修改：置为 null
+            genreTitle: null, 
             
             subTitle: displayGenre, 
+            label: displayGenre, // 兼容性字段
             
             description: d.overview,
             posterPath: d.poster_path ? `https://image.tmdb.org/t/p/w500${d.poster_path}` : ""
