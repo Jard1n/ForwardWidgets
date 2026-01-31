@@ -4,7 +4,7 @@ WidgetMetadata = {
     title: "Trak 追剧日历&个人中心",
     author: "𝙈𝙖𝙠𝙠𝙖𝙋𝙖𝙠𝙠𝙖",
     description: "追剧日历:显示你观看剧集最新集的 更新时间&Trakt 待看/收藏/历史。",
-    version: "1.0.8",
+    version: "1.0.9",
     requiredVersion: "0.0.1",
     site: "https://trakt.tv",
 
@@ -40,7 +40,6 @@ WidgetMetadata = {
                     belongTo: { paramName: "section", value: ["watchlist", "collection", "history"] },
                     enumOptions: [ { title: "全部", value: "all" }, { title: "剧集", value: "shows" }, { title: "电影", value: "movies" } ]
                 },
-                // 1. 修改点：只保留"从今天往后"一个选项，并且设为默认，不再提供选择的必要，或者只留一个作为提示
                 {
                     name: "updateSort",
                     title: "追剧模式",
@@ -75,7 +74,6 @@ function formatShortDate(dateStr) {
 // ==========================================
 
 async function loadTraktProfile(params = {}) {
-    // 强制 updateSort 为 future_first，以防缓存参数影响
     const { traktUser, traktClientId, section, updateSort = "future_first", type = "all", page = 1 } = params;
 
     if (!traktUser || !traktClientId) return [{ id: "err", type: "text", title: "请填写用户名和Client ID" }];
@@ -88,8 +86,7 @@ async function loadTraktProfile(params = {}) {
     // === B. 常规列表 (历史/待看/收藏) ===
     let rawItems = [];
     const sortType = "added,desc";
-    
-    // 如果是观看历史，使用 watched_at 排序
+    // 历史记录按观看时间倒序
     const historySort = section === "history" ? "watched_at,desc" : sortType;
 
     if (type === "all") {
@@ -102,7 +99,7 @@ async function loadTraktProfile(params = {}) {
         rawItems = await fetchTraktList(section, type, historySort, page, traktUser, traktClientId);
     }
     
-    // 再次在本地按时间倒序整理一次，确保混合类型时顺序正确
+    // 再次在本地按时间倒序整理
     rawItems.sort((a, b) => new Date(getItemTime(b, section)) - new Date(getItemTime(a, section)));
     
     if (!rawItems || rawItems.length === 0) return page === 1 ? [{ id: "empty", type: "text", title: "列表为空" }] : [];
@@ -112,25 +109,25 @@ async function loadTraktProfile(params = {}) {
         if (!subject?.ids?.tmdb) return null;
         
         let subInfo = "";
-        const timeStr = getItemTime(item, section); // 获取操作时间（观看时间/收藏时间等）
+        const timeStr = getItemTime(item, section);
 
-        // 2. 修改点：针对 History (观看历史) 的特殊处理逻辑
+        // --- 核心修改：生成历史记录字符串 ---
         if (section === "history") {
             const watchShort = formatShortDate(timeStr.split('T')[0]);
             let watchedEpInfo = "";
             
-            // 如果是剧集，提取集数信息 (S01E01)
+            // 如果存在集数信息
             if (item.episode && item.episode.season && item.episode.number) {
                 const s = item.episode.season.toString().padStart(2, '0');
                 const e = item.episode.number.toString().padStart(2, '0');
                 watchedEpInfo = ` · S${s}E${e}`;
             }
             
-            // 组合成：👁️ 05-20 看过 · S01E02
+            // 最终字符串：👁️ 05-20 看过 · S01E02
             subInfo = `👁️ ${watchShort} 看过${watchedEpInfo}`;
 
         } else {
-            // 其他列表（待看/收藏）保持原样
+            // 其他列表逻辑
             if (timeStr) subInfo = timeStr.split('T')[0];
             if (type === "all") subInfo = `[${item.show ? "剧" : "影"}] ${subInfo}`;
         }
@@ -175,11 +172,11 @@ async function loadUpdatesLogic(user, id, sort, page) {
 
         const valid = enrichedShows.filter(Boolean);
         
-        // --- 强制只保留 future_first 逻辑 ---
+        // 强制 Future First 排序
         const futureShows = valid.filter(s => s.isFuture && s.tmdb.next_episode_to_air);
         const pastShows = valid.filter(s => !s.isFuture || !s.tmdb.next_episode_to_air);
-        futureShows.sort((a, b) => new Date(a.sortDate) - new Date(b.sortDate)); // 正序
-        pastShows.sort((a, b) => new Date(b.sortDate) - new Date(a.sortDate));   // 倒序
+        futureShows.sort((a, b) => new Date(a.sortDate) - new Date(b.sortDate));
+        pastShows.sort((a, b) => new Date(b.sortDate) - new Date(a.sortDate));
         valid.length = 0; 
         valid.push(...futureShows, ...pastShows);
 
@@ -224,7 +221,6 @@ async function loadUpdatesLogic(user, id, sort, page) {
 
 async function fetchTraktList(section, type, sort, page, user, id) {
     const limit = 20; 
-    // extended=full 获取详细信息（包括 episode 数据用于历史记录集数）
     const url = `https://api.trakt.tv/users/${user}/${section}/${type}?extended=full&page=${page}&limit=${limit}`;
     try {
         const res = await Widget.http.get(url, {
@@ -234,14 +230,32 @@ async function fetchTraktList(section, type, sort, page, user, id) {
     } catch (e) { return []; }
 }
 
+// === 核心修改：强制覆盖 genreTitle 以便在UI上显示 ===
 async function fetchTmdbDetail(id, type, subInfo, originalTitle) {
     try {
         const d = await Widget.tmdb.get(`/${type}/${id}`, { params: { language: "zh-CN" } });
+        // 原始年份
         const year = (d.first_air_date || d.release_date || "").substring(0, 4);
+        
+        // UI 显示逻辑：如果 subInfo 包含 "👁️" (历史) 或 "更新" (日历)，就用 subInfo 替换 年份(genreTitle)
+        // 否则显示年份
+        let displayGenre = year;
+        if (subInfo && (subInfo.includes("👁️") || subInfo.includes("更新") || subInfo.includes("·"))) {
+            displayGenre = subInfo;
+        }
+
         return {
-            id: String(d.id), tmdbId: d.id, type: "tmdb", mediaType: type,
+            id: String(d.id), 
+            tmdbId: d.id, 
+            type: "tmdb", 
+            mediaType: type,
             title: d.name || d.title || originalTitle,
-            genreTitle: year, subTitle: subInfo, description: d.overview,
+            
+            // 这里将显示: "👁️ 05-20 看过 · S02E14"
+            genreTitle: displayGenre, 
+            
+            subTitle: subInfo, 
+            description: d.overview,
             posterPath: d.poster_path ? `https://image.tmdb.org/t/p/w500${d.poster_path}` : ""
         };
     } catch (e) { return null; }
