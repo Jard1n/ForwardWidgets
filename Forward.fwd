@@ -41,75 +41,21 @@
     },
     {
       "id": "trakt",
-      "title": "Trakt我看&Trakt个性化推荐",
-      "description": "解析Trakt想看、在看、已看、片单、追剧日历",
+      "title": "Trak 追剧日历&个人中心",
+      "description": "追剧日历:显示你观看剧集最新集的 更新时间&Trakt 待看/收藏/历史",
       "requiredVersion": "0.0.1",
-      "version": "1.0.10",
-      "author": "huangxd",
-      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/trakt.js"
-    },
-    {
-      "id": "yatu",
-      "title": "雅图(每日放送+点播排行榜+评分排行榜)",
-      "description": "解析雅图每日放送更新以及各类排行榜【五折码：CHEAP.5;七折码：CHEAP】",
-      "requiredVersion": "0.0.1",
-      "version": "1.0.5",
-      "author": "huangxd",
-      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/yatu.js"
-    },
-    {
-      "id": "zhuijurili",
-      "title": "追剧日历",
-      "description": "解析追剧日历今/明日播出剧集/番剧/国漫/综艺、各项榜单、今日推荐",
-      "requiredVersion": "0.0.1",
-      "version": "1.0.3",
-      "author": "huangxd",
-      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/zhuijurili.js"
-    },
-    {
-      "id": "hot_picks",
-      "title": "热门精选",
-      "description": "获取最新热播剧和热门影片推荐",
-      "requiredVersion": "0.0.1",
-      "version": "1.1.0",
-      "author": "两块",
-      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/HotPicks.js"
-    },
-    {
-      "id": "bangumi",
-      "title": "Bangumi 热门榜单",
-      "description": "获取Bangumi近期热门、每日放送数据，支持榜单筛选",
-      "requiredVersion": "0.0.1",
-      "version": "2.0.0", 
-      "author": "Autism",
-      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/Bangumi_2.0.js"
-    },
-    {
-      "id": "imdb_v2",
-      "title": "IMDb v2",
-      "description": "聚合 IMDb 热门影视资源",
-      "requiredVersion": "0.0.1",
-      "version": "2.0.0",
-      "author": "Autism",
-      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/IMDb.js"
-    },
-    {
-      "id": "douban",
-      "title": "豆瓣",
-      "description": "解析豆瓣片单，获取视频信息",
-      "requiredVersion": "0.0.1",
-      "version": "1.0.0",
-      "author": "pack1r",
-      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/douban.js"
-    },
-    {
-      "id": "tmdb",
-      "title": "TMDB",
-      "description": "TMDB榜单",
-      "requiredVersion": "0.0.1",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": "Jard1n",
-      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/tmdb.js"
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/traktlistpro.js"
+    },
+    {
+      "id": "forward.danmu.pro.online_dict",
+      "title": "多源弹幕",
+      "description": "支持添加多条api并自命名&繁简互转",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.8",
+      "author": "𝙈𝙖𝙠𝙠𝙖𝙋𝙖𝙠𝙠𝙖",
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/danmuapi-Pro.js"
     },
     {
       "id": "forward.auto.danmu",
