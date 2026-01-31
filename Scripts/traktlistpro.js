@@ -4,7 +4,7 @@ WidgetMetadata = {
     title: "Trak 追剧日历&个人中心",
     author: "𝙈𝙖𝙠𝙠𝙖𝙋𝙖𝙠𝙠𝙖",
     description: "追剧日历:显示你观看剧集最新集的 更新时间&Trakt 待看/收藏/历史。",
-    version: "1.1.3",
+    version: "1.1.4",
     requiredVersion: "0.0.1",
     site: "https://trakt.tv",
 
@@ -121,7 +121,7 @@ async function loadTraktProfile(params = {}) {
                 const e = item.episode.number.toString().padStart(2, '0');
                 watchedEpInfo = ` · S${s}E${e}`;
             }
-            // 修改：移除所有图标，保留 26-01-30 看过 · SxxExx
+            // 纯文本，无空格前缀，确保和标题对其
             subInfo = `${watchShort} 看过${watchedEpInfo}`;
 
         } else {
@@ -198,7 +198,7 @@ async function loadUpdatesLogic(user, id, sort, page) {
             
             if (epData) {
                 const shortDate = formatShortDate(epData.air_date);
-                // 修改：纯文本，无空格前缀，无图标
+                // 确保这里没有任何前导空格
                 displayStr = `${shortDate} · S${epData.season_number}E${epData.episode_number}${statusSuffix}`;
             }
 
@@ -208,7 +208,7 @@ async function loadUpdatesLogic(user, id, sort, page) {
                 type: "tmdb", 
                 mediaType: "tv",
                 title: d.name, 
-                // 修改：确保 genreTitle 赋值为纯文本 displayStr
+                // 关键修正：确保 genreTitle 被正确赋值且无前缀
                 genreTitle: displayStr, 
                 subTitle: displayStr,
                 posterPath: d.poster_path ? `https://image.tmdb.org/t/p/w500${d.poster_path}` : "",
@@ -234,9 +234,12 @@ async function fetchTmdbDetail(id, type, subInfo, originalTitle) {
         const d = await Widget.tmdb.get(`/${type}/${id}`, { params: { language: "zh-CN" } });
         const year = (d.first_air_date || d.release_date || "").substring(0, 4);
         
+        // 默认显示年份（完美对齐）
         let displayGenre = year;
-        // 修正逻辑：如果 subInfo 是特殊格式（包含 · 或 看过），强制覆盖 genreTitle
-        if (subInfo && (subInfo.includes("·") || subInfo.includes("看过"))) {
+        
+        // 如果有自定义信息（如历史记录日期），覆盖年份
+        // 确保 subInfo 本身是干净的字符串，没有前导空格
+        if (subInfo && subInfo !== "1970-01-01") {
             displayGenre = subInfo;
         }
 
