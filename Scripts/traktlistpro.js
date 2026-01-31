@@ -4,7 +4,7 @@ WidgetMetadata = {
     title: "Trak 追剧日历&个人中心",
     author: "𝙈𝙖𝙠𝙠𝙖𝙋𝙖𝙠𝙠𝙖",
     description: "追剧日历:显示你观看剧集最新集的 更新时间&Trakt 待看/收藏/历史。",
-    version: "1.1.6",
+    version: "1.1.7",
     requiredVersion: "0.0.1",
     site: "https://trakt.tv",
 
@@ -198,8 +198,8 @@ async function loadUpdatesLogic(user, id, sort, page) {
                 displayStr = `${shortDate} · S${epData.season_number}E${epData.episode_number}${statusSuffix}`;
             }
 
-            // 清理字符串
-            displayStr = displayStr.trim();
+            // 清理字符串，确保没有多余空格
+            displayStr = String(displayStr).trim();
 
             return {
                 id: String(d.id), 
@@ -208,10 +208,10 @@ async function loadUpdatesLogic(user, id, sort, page) {
                 mediaType: "tv",
                 title: String(d.name).trim(),
                 
-                // 关键修改：置空 genreTitle，避免标签化渲染带来的缩进
-                genreTitle: "", 
+                // 恢复使用 genreTitle 确保显示
+                genreTitle: displayStr, 
                 
-                // 关键修改：内容只放 subTitle，确保纯文本左对齐
+                // 同时赋值 subTitle 作为备份
                 subTitle: displayStr, 
                 
                 posterPath: d.poster_path ? `https://image.tmdb.org/t/p/w500${d.poster_path}` : "",
@@ -239,7 +239,6 @@ async function fetchTmdbDetail(id, type, subInfo, originalTitle) {
         
         let displayGenre = year;
         
-        // 如果有 subInfo，使用它覆盖默认年份
         if (subInfo && subInfo !== "1970-01-01") {
             displayGenre = subInfo;
         }
@@ -253,10 +252,9 @@ async function fetchTmdbDetail(id, type, subInfo, originalTitle) {
             mediaType: type,
             title: String(d.name || d.title || originalTitle).trim(),
             
-            // 关键修改：同样置空 genreTitle
-            genreTitle: "", 
+            // 恢复使用 genreTitle
+            genreTitle: displayGenre, 
             
-            // 关键修改：内容只放 subTitle
             subTitle: displayGenre, 
             
             description: d.overview,
