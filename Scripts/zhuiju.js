@@ -1,9 +1,9 @@
 WidgetMetadata = {
-  id: "makka.anime.tabs.selector",
+  id: "makka.anime.tabs.clean.style",
   title: "全网国漫·日程表",
   author: "Customized",
   description: "聚合国内四大平台更新，国漫·日程表",
-  version: "1.0.0",
+  version: "1.0.2",
   requiredVersion: "0.0.1",
   modules: [
     {
@@ -12,21 +12,17 @@ WidgetMetadata = {
       type: "list",
       requiresWebView: false,
       params: [
-        // 1. 顶部标签选择器
         {
           name: "dayTab",
           title: "日期切换",
           type: "enumeration", 
-          // 这里的 value 会作为默认选中的标签
           value: "today", 
           enumOptions: [
             { title: "📅 今日播出", value: "today" },
             { title: "🌅 明日预告", value: "tomorrow" }
           ],
-          // 关键：设置为 inline 可能会在部分客户端表现为顶部 Tab 切换
           displayMode: "inline" 
         },
-        // 2. 页码
         {
           name: "page",
           title: "页码",
@@ -42,35 +38,22 @@ WidgetMetadata = {
 // ==========================================
 
 async function loadAnimeWithTabs(params) {
-  // 获取当前选中的标签：today 或 tomorrow
   const dayTab = params.dayTab || "today"; 
   const page = params.page || 1;
   
-  // 1. 计算目标日期
+  // 1. 计算日期
   const targetDate = new Date();
-  
-  // 如果选了明天，日期+1
   if (dayTab === "tomorrow") {
       targetDate.setDate(targetDate.getDate() + 1);
   }
-  
-  // 转为 YYYY-MM-DD 格式
   const dateStr = new Date(targetDate.getTime() - (targetDate.getTimezoneOffset() * 60000))
                   .toISOString().split("T")[0];
 
-  // 定义四大平台 ID
-  const networks = [
-      "1605", // Bilibili
-      "2007", // 腾讯视频
-      "1330", // 爱奇艺
-      "1419"  // 优酷
-  ];
+  const networks = ["1605", "2007", "1330", "1419"];
 
-  // 仅支持第一页聚合（性能考虑）
   if (page > 1) return [];
 
   try {
-    // 2. 并发请求四大平台
     const promises = networks.map(netId => {
         return Widget.tmdb.get("/discover/tv", { 
             params: {
@@ -78,8 +61,8 @@ async function loadAnimeWithTabs(params) {
                 language: "zh-CN",
                 include_null_first_air_dates: false,
                 page: 1, 
-                with_genres: "16", // 动画
-                "air_date.gte": dateStr, // 锁定具体某一天
+                with_genres: "16", 
+                "air_date.gte": dateStr, 
                 "air_date.lte": dateStr, 
                 sort_by: "popularity.desc"
             }
@@ -88,7 +71,6 @@ async function loadAnimeWithTabs(params) {
 
     const resultsArray = await Promise.all(promises);
     
-    // 3. 合并去重
     const allItems = resultsArray.flat();
     const uniqueItems = [];
     const seenIds = new Set();
@@ -102,10 +84,9 @@ async function loadAnimeWithTabs(params) {
 
     const label = dayTab === "today" ? "今日" : "明天";
     if (uniqueItems.length === 0) {
-        return [{ title: "暂无更新", subTitle: `${label}四大平台均无记录`, type: "text" }];
+        return [{ title: "暂无更新", subTitle: `${label}无记录`, type: "text" }];
     }
 
-    // 4. 获取详细信息 (取热度前 30 防止请求爆炸)
     const topItems = uniqueItems
         .sort((a, b) => b.popularity - a.popularity)
         .slice(0, 30);
@@ -115,25 +96,23 @@ async function loadAnimeWithTabs(params) {
             const detail = await Widget.tmdb.get(`/tv/${item.id}`, { 
                 params: { 
                     language: "zh-CN",
-                    append_to_response: "next_episode_to_air,last_episode_to_air,networks"
+                    append_to_response: "networks"
                 } 
             });
 
             if (!detail) return null;
 
-            // 寻找匹配日期的集数
-            let targetEp = null;
-            if (detail.next_episode_to_air && detail.next_episode_to_air.air_date === dateStr) {
-                targetEp = detail.next_episode_to_air;
-            } else if (detail.last_episode_to_air && detail.last_episode_to_air.air_date === dateStr) {
-                targetEp = detail.last_episode_to_air;
+            // --- 获取年份 ---
+            let year = "";
+            if (item.first_air_date) {
+                year = item.first_air_date.split("-")[0];
+            } else if (detail.first_air_date) {
+                year = detail.first_air_date.split("-")[0];
+            } else {
+                year = new Date().getFullYear();
             }
 
-            if (!targetEp) return null;
-
-            const epStr = `S${String(targetEp.season_number).padStart(2,'0')}E${String(targetEp.episode_number).padStart(2,'0')}`;
-            
-            // 获取平台名
+            // --- 获取平台名 ---
             let platformName = "";
             if (detail.networks) {
                  const targetNames = ["Bilibili", "Tencent Video", "iQiyi", "Youku"];
@@ -152,8 +131,7 @@ async function loadAnimeWithTabs(params) {
 
             return {
                 ...item,
-                _displayStr: `${label} · ${epStr}`, // 显示 "今日 · S02E10"
-                _platform: platformName,
+                _subTitleStr: `${year} · ${platformName}`, // 格式：2024 · 腾讯
                 vote_average: detail.vote_average
             };
 
@@ -162,7 +140,6 @@ async function loadAnimeWithTabs(params) {
         }
     }));
 
-    // 5. 最终返回
     const finalItems = processedItems
         .filter(i => i !== null)
         .sort((a, b) => b.popularity - a.popularity);
@@ -174,7 +151,7 @@ async function loadAnimeWithTabs(params) {
     return finalItems.map(item => buildCard(item));
 
   } catch (e) {
-    return [{ title: "请求失败", subTitle: e.message, type: "text" }];
+    return [{ title: "请求失败", subTitle: String(e), type: "text" }];
   }
 }
 
@@ -189,8 +166,9 @@ function buildCard(item) {
         type: "tmdb",
         mediaType: "tv",
         title: item.name || item.original_name,
-        subTitle: item._displayStr,  // 左下角：今日 · SxxExx
-        genreTitle: item._platform,  // 右上角：B站/腾讯
+        // 左下角显示 "年份 · 平台"
+        subTitle: item._subTitleStr,  
+        // 右上角已删除，保持空白
         description: item.overview || "暂无简介",
         posterPath: imagePath
     };
