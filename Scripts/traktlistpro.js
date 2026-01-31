@@ -121,7 +121,7 @@ async function loadTraktProfile(params = {}) {
                 watchedEpInfo = ` · S${s}E${e}`;
             }
             // 修改：移除所有图标，保留 26-01-30 看过 · SxxExx
-            subInfo = `${watchShort} 看过${watchedEpInfo}`;
+            subInfo = `${watchShort} 已观看${watchedEpInfo}`;
 
         } else {
             if (timeStr) subInfo = timeStr.split('T')[0];
@@ -235,7 +235,7 @@ async function fetchTmdbDetail(id, type, subInfo, originalTitle) {
         
         let displayGenre = year;
         // 修正逻辑：如果 subInfo 是特殊格式（包含 · 或 看过），强制覆盖 genreTitle
-        if (subInfo && (subInfo.includes("·") || subInfo.includes("看过"))) {
+        if (subInfo && (subInfo.includes("·") || subInfo.includes("已观看"))) {
             displayGenre = subInfo;
         }
 
