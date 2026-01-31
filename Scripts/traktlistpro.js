@@ -4,7 +4,7 @@ WidgetMetadata = {
     title: "Trak 追剧日历&个人中心",
     author: "𝙈𝙖𝙠𝙠𝙖𝙋𝙖𝙠𝙠𝙖",
     description: "追剧日历:显示你观看剧集最新集的 更新时间&Trakt 待看/收藏/历史。",
-    version: "1.1.5",
+    version: "1.1.6",
     requiredVersion: "0.0.1",
     site: "https://trakt.tv",
 
@@ -98,7 +98,7 @@ async function loadTraktProfile(params = {}) {
         rawItems = await fetchTraktList(section, type, historySort, page, traktUser, traktClientId);
     }
     
-    // 本地倒序排序
+    // 排序
     rawItems.sort((a, b) => new Date(getItemTime(b, section)) - new Date(getItemTime(a, section)));
     
     if (!rawItems || rawItems.length === 0) return page === 1 ? [{ id: "empty", type: "text", title: "列表为空" }] : [];
@@ -110,7 +110,7 @@ async function loadTraktProfile(params = {}) {
         let subInfo = "";
         const timeStr = getItemTime(item, section);
 
-        // --- 核心处理：历史记录 (History) ---
+        // --- 历史记录 ---
         if (section === "history") {
             const watchShort = formatShortDate(timeStr.split('T')[0]);
             let watchedEpInfo = "";
@@ -120,7 +120,6 @@ async function loadTraktProfile(params = {}) {
                 const e = item.episode.number.toString().padStart(2, '0');
                 watchedEpInfo = ` · S${s}E${e}`;
             }
-            // 纯文本拼接，无特殊符号
             subInfo = `${watchShort} 看过${watchedEpInfo}`;
 
         } else {
@@ -196,18 +195,25 @@ async function loadUpdatesLogic(user, id, sort, page) {
             
             if (epData) {
                 const shortDate = formatShortDate(epData.air_date);
-                // 纯净格式：26-01-31 · S01E02
                 displayStr = `${shortDate} · S${epData.season_number}E${epData.episode_number}${statusSuffix}`;
             }
+
+            // 清理字符串
+            displayStr = displayStr.trim();
 
             return {
                 id: String(d.id), 
                 tmdbId: d.id, 
                 type: "tmdb", 
                 mediaType: "tv",
-                title: String(d.name), // 确保标题也是 String
-                genreTitle: String(displayStr), // 强制 String，确保无格式污染
-                subTitle: String(displayStr), 
+                title: String(d.name).trim(),
+                
+                // 关键修改：置空 genreTitle，避免标签化渲染带来的缩进
+                genreTitle: "", 
+                
+                // 关键修改：内容只放 subTitle，确保纯文本左对齐
+                subTitle: displayStr, 
+                
                 posterPath: d.poster_path ? `https://image.tmdb.org/t/p/w500${d.poster_path}` : "",
                 description: `上次观看: ${item.watchedDate.split("T")[0]}\n${d.overview}`
             };
@@ -233,18 +239,26 @@ async function fetchTmdbDetail(id, type, subInfo, originalTitle) {
         
         let displayGenre = year;
         
+        // 如果有 subInfo，使用它覆盖默认年份
         if (subInfo && subInfo !== "1970-01-01") {
             displayGenre = subInfo;
         }
+
+        displayGenre = String(displayGenre).trim();
 
         return {
             id: String(d.id), 
             tmdbId: d.id, 
             type: "tmdb", 
             mediaType: type,
-            title: String(d.name || d.title || originalTitle),
-            genreTitle: String(displayGenre), // 强制 String
-            subTitle: String(subInfo), 
+            title: String(d.name || d.title || originalTitle).trim(),
+            
+            // 关键修改：同样置空 genreTitle
+            genreTitle: "", 
+            
+            // 关键修改：内容只放 subTitle
+            subTitle: displayGenre, 
+            
             description: d.overview,
             posterPath: d.poster_path ? `https://image.tmdb.org/t/p/w500${d.poster_path}` : ""
         };
