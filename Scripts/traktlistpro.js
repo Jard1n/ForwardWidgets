@@ -4,7 +4,7 @@ WidgetMetadata = {
     title: "Trak 追剧日历&个人中心",
     author: "𝙈𝙖𝙠𝙠𝙖𝙋𝙖𝙠𝙠𝙖",
     description: "追剧日历:显示你观看剧集最新集的 更新时间&Trakt 待看/收藏/历史。",
-    version: "1.1.0",
+    version: "1.1.1",
     requiredVersion: "0.0.1",
     site: "https://trakt.tv",
 
@@ -60,14 +60,16 @@ WidgetMetadata = {
 // 0. 工具函数
 // ==========================================
 
-// 修改点1：格式化日期为 dd-MM-yy (例如 26-01-30)
+// 修正点1：格式化日期为 yy-MM-dd (年-月-日，例如 25-01-30)
 function formatShortDate(dateStr) {
     if (!dateStr) return "待定";
     const date = new Date(dateStr);
     const d = date.getDate().toString().padStart(2, '0');
     const m = (date.getMonth() + 1).toString().padStart(2, '0');
-    const y = date.getFullYear().toString().slice(-2); // 获取年份后两位
-    return `${d}-${m}-${y}`;
+    const y = date.getFullYear().toString().slice(-2); // 获取年份后两位 (2025 -> 25)
+    
+    // 之前是 d-m-y，现在改为 y-m-d
+    return `${y}-${m}-${d}`;
 }
 
 // ==========================================
@@ -111,7 +113,7 @@ async function loadTraktProfile(params = {}) {
         let subInfo = "";
         const timeStr = getItemTime(item, section);
 
-        // 修改点2：更新显示格式
+        // 核心处理区域
         if (section === "history") {
             const watchShort = formatShortDate(timeStr.split('T')[0]);
             let watchedEpInfo = "";
@@ -123,7 +125,7 @@ async function loadTraktProfile(params = {}) {
                 watchedEpInfo = ` · S${s}E${e}`;
             }
             
-            // 最终字符串：👁️ 26-01-30 看过 · S01E02
+            // 最终字符串：👁️ 25-01-30 看过 · S01E02
             subInfo = `👁️ ${watchShort} 看过${watchedEpInfo}`;
 
         } else {
@@ -234,8 +236,8 @@ async function fetchTmdbDetail(id, type, subInfo, originalTitle) {
         const d = await Widget.tmdb.get(`/${type}/${id}`, { params: { language: "zh-CN" } });
         const year = (d.first_air_date || d.release_date || "").substring(0, 4);
         
-        // UI 显示逻辑：优先显示 subInfo (观看历史/日历时间)，否则显示年份
         let displayGenre = year;
+        // 修正点2：强制替换 genreTitle 为观看记录
         if (subInfo && (subInfo.includes("👁️") || subInfo.includes("更新") || subInfo.includes("·"))) {
             displayGenre = subInfo;
         }
@@ -246,10 +248,7 @@ async function fetchTmdbDetail(id, type, subInfo, originalTitle) {
             type: "tmdb", 
             mediaType: type,
             title: d.name || d.title || originalTitle,
-            
-            // 确保这里使用更新后的 displayGenre
             genreTitle: displayGenre, 
-            
             subTitle: subInfo, 
             description: d.overview,
             posterPath: d.poster_path ? `https://image.tmdb.org/t/p/w500${d.poster_path}` : ""
