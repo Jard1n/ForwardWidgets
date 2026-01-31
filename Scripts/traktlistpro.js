@@ -4,7 +4,7 @@ WidgetMetadata = {
     title: "Trak 追剧日历&个人中心",
     author: "𝙈𝙖𝙠𝙠𝙖𝙋𝙖𝙠𝙠𝙖",
     description: "追剧日历:显示你观看剧集最新集的 更新时间&Trakt 待看/收藏/历史。",
-    version: "1.1.8",
+    version: "1.1.9",
     requiredVersion: "0.0.1",
     site: "https://trakt.tv",
 
@@ -199,26 +199,27 @@ async function loadUpdatesLogic(user, id, sort, page) {
             }
 
             displayStr = String(displayStr).trim();
+            const poster = d.poster_path ? `https://image.tmdb.org/t/p/w500${d.poster_path}` : "";
 
             return {
                 id: String(d.id), 
-                tmdbId: d.id, 
-                // 关键点：保持 tmdb 类型以便获取海报等原生支持，
-                // 但通过字段控制来模拟 zhuijurili.js 的效果
-                type: "tmdb", 
-                mediaType: "tv",
+                // !!! 关键修改：放弃 "tmdb"，改用 "poster" 
+                // 这将强制 Forward 使用通用海报列表布局，该布局的 subTitle 通常是完美左对齐的
+                type: "poster", 
+                
                 title: String(d.name).trim(),
                 
-                // 核心修改：完全置为 null，强迫 Forward 渲染 subTitle
-                genreTitle: null, 
+                // 通用布局通常不需要 genreTitle，我们用 subTitle
+                subTitle: displayStr, 
                 
-                // 核心修改：确保这里有值
-                subTitle: displayStr,
+                // 为了保险，image 也传一下
+                image: poster,
+                poster: poster, // 某些版本可能读这个字段
+                posterPath: poster, // 某些版本读这个
+
+                // 点击跳转参数（因为不再是 tmdb 类型，可能需要手动指定跳转逻辑，但通常 Forward 仍能智能识别）
+                link: `https://www.themoviedb.org/tv/${d.id}`,
                 
-                // 额外保险：zhuijurili.js 有时会用到 label
-                label: displayStr,
-                
-                posterPath: d.poster_path ? `https://image.tmdb.org/t/p/w500${d.poster_path}` : "",
                 description: `上次观看: ${item.watchedDate.split("T")[0]}\n${d.overview}`
             };
         });
@@ -248,22 +249,22 @@ async function fetchTmdbDetail(id, type, subInfo, originalTitle) {
         }
 
         displayGenre = String(displayGenre).trim();
+        const poster = d.poster_path ? `https://image.tmdb.org/t/p/w500${d.poster_path}` : "";
 
         return {
             id: String(d.id), 
-            tmdbId: d.id, 
-            type: "tmdb", 
-            mediaType: type,
+            // !!! 同样修改为 poster
+            type: "poster", 
+            
             title: String(d.name || d.title || originalTitle).trim(),
-            
-            // 核心修改：置为 null
-            genreTitle: null, 
-            
             subTitle: displayGenre, 
-            label: displayGenre, // 兼容性字段
             
-            description: d.overview,
-            posterPath: d.poster_path ? `https://image.tmdb.org/t/p/w500${d.poster_path}` : ""
+            image: poster,
+            poster: poster,
+            posterPath: poster,
+            link: `https://www.themoviedb.org/${type}/${d.id}`,
+            
+            description: d.overview
         };
     } catch (e) { return null; }
 }
