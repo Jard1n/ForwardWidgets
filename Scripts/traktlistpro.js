@@ -4,7 +4,7 @@ WidgetMetadata = {
     title: "Trak 追剧日历&个人中心",
     author: "𝙈𝙖𝙠𝙠𝙖𝙋𝙖𝙠𝙠𝙖",
     description: "追剧日历:显示你观看剧集最新集的 更新时间&Trakt 待看/收藏/历史。",
-    version: "1.1.1",
+    version: "1.1.3",
     requiredVersion: "0.0.1",
     site: "https://trakt.tv",
 
@@ -60,15 +60,13 @@ WidgetMetadata = {
 // 0. 工具函数
 // ==========================================
 
-// 修正点1：格式化日期为 yy-MM-dd (年-月-日，例如 25-01-30)
+// 格式化日期为 yy-MM-dd (26-01-30)
 function formatShortDate(dateStr) {
     if (!dateStr) return "待定";
     const date = new Date(dateStr);
     const d = date.getDate().toString().padStart(2, '0');
     const m = (date.getMonth() + 1).toString().padStart(2, '0');
-    const y = date.getFullYear().toString().slice(-2); // 获取年份后两位 (2025 -> 25)
-    
-    // 之前是 d-m-y，现在改为 y-m-d
+    const y = date.getFullYear().toString().slice(-2); 
     return `${y}-${m}-${d}`;
 }
 
@@ -113,20 +111,18 @@ async function loadTraktProfile(params = {}) {
         let subInfo = "";
         const timeStr = getItemTime(item, section);
 
-        // 核心处理区域
+        // --- 核心处理：历史记录 (History) ---
         if (section === "history") {
             const watchShort = formatShortDate(timeStr.split('T')[0]);
             let watchedEpInfo = "";
             
-            // 如果存在集数信息
             if (item.episode && item.episode.season && item.episode.number) {
                 const s = item.episode.season.toString().padStart(2, '0');
                 const e = item.episode.number.toString().padStart(2, '0');
                 watchedEpInfo = ` · S${s}E${e}`;
             }
-            
-            // 最终字符串：👁️ 25-01-30 看过 · S01E02
-            subInfo = `👁️ ${watchShort} 看过${watchedEpInfo}`;
+            // 修改：移除所有图标，保留 26-01-30 看过 · SxxExx
+            subInfo = `${watchShort} 看过${watchedEpInfo}`;
 
         } else {
             if (timeStr) subInfo = timeStr.split('T')[0];
@@ -140,7 +136,7 @@ async function loadTraktProfile(params = {}) {
 }
 
 // ==========================================
-// 2. 追剧日历逻辑 
+// 2. 追剧日历逻辑 (Updates)
 // ==========================================
 
 async function loadUpdatesLogic(user, id, sort, page) {
@@ -202,6 +198,7 @@ async function loadUpdatesLogic(user, id, sort, page) {
             
             if (epData) {
                 const shortDate = formatShortDate(epData.air_date);
+                // 修改：纯文本，无空格前缀，无图标
                 displayStr = `${shortDate} · S${epData.season_number}E${epData.episode_number}${statusSuffix}`;
             }
 
@@ -211,6 +208,7 @@ async function loadUpdatesLogic(user, id, sort, page) {
                 type: "tmdb", 
                 mediaType: "tv",
                 title: d.name, 
+                // 修改：确保 genreTitle 赋值为纯文本 displayStr
                 genreTitle: displayStr, 
                 subTitle: displayStr,
                 posterPath: d.poster_path ? `https://image.tmdb.org/t/p/w500${d.poster_path}` : "",
@@ -237,8 +235,8 @@ async function fetchTmdbDetail(id, type, subInfo, originalTitle) {
         const year = (d.first_air_date || d.release_date || "").substring(0, 4);
         
         let displayGenre = year;
-        // 修正点2：强制替换 genreTitle 为观看记录
-        if (subInfo && (subInfo.includes("👁️") || subInfo.includes("更新") || subInfo.includes("·"))) {
+        // 修正逻辑：如果 subInfo 是特殊格式（包含 · 或 看过），强制覆盖 genreTitle
+        if (subInfo && (subInfo.includes("·") || subInfo.includes("看过"))) {
             displayGenre = subInfo;
         }
 
