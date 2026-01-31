@@ -2,7 +2,7 @@ WidgetMetadata = {
   id: "makka.anime.tabs.selector",
   title: "全网国漫·日程表",
   author: "Customized",
-  description: "支持顶部标签切换“今日/明天”，聚合四大平台更新",
+  description: "聚合国内四大平台更新，国漫·日程表",
   version: "1.0.0",
   requiredVersion: "0.0.1",
   modules: [
