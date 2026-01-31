@@ -1,9 +1,9 @@
 WidgetMetadata = {
-  id: "makka.anime.tabs.clean.style",
+  id: "makka.anime.tabs.fixed.subtitle",
   title: "全网国漫·日程表",
   author: "Customized",
   description: "聚合国内四大平台更新，国漫·日程表",
-  version: "1.0.2",
+  version: "1.0.3",
   requiredVersion: "0.0.1",
   modules: [
     {
@@ -33,15 +33,10 @@ WidgetMetadata = {
   ],
 };
 
-// ==========================================
-// 主逻辑
-// ==========================================
-
 async function loadAnimeWithTabs(params) {
   const dayTab = params.dayTab || "today"; 
   const page = params.page || 1;
   
-  // 1. 计算日期
   const targetDate = new Date();
   if (dayTab === "tomorrow") {
       targetDate.setDate(targetDate.getDate() + 1);
@@ -102,17 +97,13 @@ async function loadAnimeWithTabs(params) {
 
             if (!detail) return null;
 
-            // --- 获取年份 ---
             let year = "";
             if (item.first_air_date) {
                 year = item.first_air_date.split("-")[0];
-            } else if (detail.first_air_date) {
-                year = detail.first_air_date.split("-")[0];
             } else {
                 year = new Date().getFullYear();
             }
 
-            // --- 获取平台名 ---
             let platformName = "";
             if (detail.networks) {
                  const targetNames = ["Bilibili", "Tencent Video", "iQiyi", "Youku"];
@@ -131,7 +122,7 @@ async function loadAnimeWithTabs(params) {
 
             return {
                 ...item,
-                _subTitleStr: `${year} · ${platformName}`, // 格式：2024 · 腾讯
+                _subTitleStr: `${year} · ${platformName}`, 
                 vote_average: detail.vote_average
             };
 
@@ -155,21 +146,31 @@ async function loadAnimeWithTabs(params) {
   }
 }
 
+// ==========================================
+// 修复的核心部分
+// ==========================================
 function buildCard(item) {
     let imagePath = "";
+    // 优先使用 backdrop (横图)
     if (item.backdrop_path) imagePath = `https://image.tmdb.org/t/p/w780${item.backdrop_path}`;
     else if (item.poster_path) imagePath = `https://image.tmdb.org/t/p/w500${item.poster_path}`;
 
     return {
-        id: String(item.id),
-        tmdbId: parseInt(item.id),
-        type: "tmdb",
-        mediaType: "tv",
+        // 使用 generic 类型而不是 tmdb，可以完全控制显示内容
+        // Forward 会将其渲染为标准图文卡片
+        type: "ticket", // 尝试使用 ticket 或 pure 卡片样式，通常对 subTitle 支持更好
         title: item.name || item.original_name,
-        // 左下角显示 "年份 · 平台"
-        subTitle: item._subTitleStr,  
-        // 右上角已删除，保持空白
-        description: item.overview || "暂无简介",
-        posterPath: imagePath
+        subTitle: item._subTitleStr, // 标准副标题位置
+        footnote: item._subTitleStr, // 某些布局下的底部文字
+        
+        image: imagePath, // 通用图片字段
+        posterPath: imagePath, // 兼容字段
+        
+        // 交互动作：点击跳转到 TMDb 详情页
+        link: `https://www.themoviedb.org/tv/${item.id}`,
+        
+        // 辅助信息
+        itemType: "tv",
+        tmdbId: item.id
     };
 }
