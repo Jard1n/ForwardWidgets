@@ -128,17 +128,20 @@ async function loadAnimeWithTabs(params) {
             // 获取平台名
             let platformName = "";
             if (detail.networks) {
-                 const targetNames = ["Bilibili", "Tencent Video", "iQiyi", "Youku"];
                  const names = detail.networks
-                    .filter(n => targetNames.some(t => n.name.includes(t) || n.name === t))
                     .map(n => {
-                        if (n.name.includes("Bilibili")) return "B站";
-                        if (n.name.includes("Tencent")) return "腾讯";
-                        if (n.name.includes("iQiyi")) return "爱奇艺";
-                        if (n.name.includes("Youku")) return "优酷";
-                        return n.name;
-                    });
-                if (names.length > 0) platformName = names.slice(0, 2).join("/");
+                        const lowerName = n.name.toLowerCase();
+                        if (lowerName.includes("bilibili")) return "B站";
+                        if (lowerName.includes("tencent")) return "腾讯";
+                        if (lowerName.includes("iqiyi")) return "爱奇艺";
+                        if (lowerName.includes("youku")) return "优酷";
+                        return null;
+                    })
+                    .filter(n => n !== null); // 过滤掉非目标平台
+
+                // 去重（防止同一平台出现多次）并取前两个
+                const uniqueNames = [...new Set(names)];
+                if (uniqueNames.length > 0) platformName = uniqueNames.slice(0, 2).join("/");
             }
             if (!platformName) platformName = "全网";
 
