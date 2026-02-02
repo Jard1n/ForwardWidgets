@@ -175,19 +175,17 @@ async function loadAnimeWithTabs(params) {
 }
 
 function buildCard(item) {
-    let imagePath = "";
-    if (item.backdrop_path) imagePath = `https://image.tmdb.org/t/p/w780${item.backdrop_path}`;
-    else if (item.poster_path) imagePath = `https://image.tmdb.org/t/p/w500${item.poster_path}`;
-
     return {
         id: String(item.id),
         tmdbId: parseInt(item.id),
         type: "tmdb",
         mediaType: "tv",
         title: item.name || item.original_name,
-        subTitle: item._displayStr,  // 左下角
-        genreTitle: item._platform,  // 右上角
+        subTitle: item._displayStr,
+        genreTitle: item._platform,
         description: item.overview || "暂无简介",
-        posterPath: imagePath
+        // 直接透传字段，让客户端自己处理
+        backdropPath: item.backdrop_path, 
+        posterPath: item.poster_path
     };
 }
