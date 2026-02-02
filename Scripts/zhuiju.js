@@ -3,7 +3,7 @@ WidgetMetadata = {
   title: "全网国漫·日程表",
   author: "Customized",
   description: "聚合国内四大平台更新，国漫·日程表",
-  version: "1.0.2",
+  version: "1.0.3",
   requiredVersion: "0.0.1",
   modules: [
     {
