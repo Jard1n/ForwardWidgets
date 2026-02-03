@@ -1,16 +1,18 @@
 WidgetMetadata = {
   id: "makka.anime.tabs.selector",
   title: "全网国漫·日程表",
-  author: "Customized",
+  author: "Jard1n",
   description: "聚合国内四大平台更新，国漫·日程表",
   version: "1.0.3",
   requiredVersion: "0.0.1",
+  detailCacheDuration: 3600, 
   modules: [
     {
       title: "国漫更新",
       functionName: "loadAnimeWithTabs",
       type: "list",
       requiresWebView: false,
+      cacheDuration: 3600, 
       params: [
         {
           name: "dayTab",
@@ -34,146 +36,111 @@ WidgetMetadata = {
 };
 
 // ==========================================
+// 常量配置
+// ==========================================
+
+const NETWORKS_CONFIG = [
+    { id: "1605", name: "B站" },
+    { id: "2007", name: "腾讯" },
+    { id: "1330", name: "爱奇艺" },
+    { id: "1419", name: "优酷" }
+];
+
+// ==========================================
 // 主逻辑
 // ==========================================
 
 async function loadAnimeWithTabs(params) {
-  // 获取当前选中的标签：today 或 tomorrow
   const dayTab = params.dayTab || "today"; 
   const page = params.page || 1;
   
-  // 1. 计算目标日期
-  const targetDate = new Date();
-  
-  // 如果选了明天，日期+1
-  if (dayTab === "tomorrow") {
-      targetDate.setDate(targetDate.getDate() + 1);
-  }
-  
-  // 转为 YYYY-MM-DD 格式 (处理时区问题)
-  const dateStr = new Date(targetDate.getTime() - (targetDate.getTimezoneOffset() * 60000))
-                  .toISOString().split("T")[0];
-
-  // 定义四大平台 ID
-  // 1605: Bilibili, 2007: 腾讯视频, 1330: 爱奇艺, 1419: 优酷
-  const networks = ["1605", "2007", "1330", "1419"];
-
-  // 仅支持第一页聚合（性能考虑）
+  // 性能优化：仅支持第一页，因为聚合去重逻辑在分页下极其复杂且耗资源
   if (page > 1) return [];
+
+  // 1. 获取东八区(CN)的日期字符串
+  const dateStr = getCNDateString(dayTab === "tomorrow" ? 1 : 0);
 
   try {
     // 2. 并发请求四大平台
-    const promises = networks.map(netId => {
+    const promises = NETWORKS_CONFIG.map(network => {
         return Widget.tmdb.get("/discover/tv", { 
             params: {
-                with_networks: netId,
+                with_networks: network.id,
                 language: "zh-CN",
                 include_null_first_air_dates: false,
                 page: 1, 
                 with_genres: "16", // 动画分类
-                "air_date.gte": dateStr, // 锁定具体某一天
+                "air_date.gte": dateStr, // 锁定具体日期
                 "air_date.lte": dateStr, 
                 sort_by: "popularity.desc"
             }
-        }).then(res => res?.results || []);
+        }).then(res => {
+            const results = res?.results || [];
+            // 在这里直接注入平台名称
+            return results.map(item => ({ ...item, _platformSource: network.name }));
+        });
     });
 
     const resultsArray = await Promise.all(promises);
     
-    // 3. 合并去重
-    const allItems = resultsArray.flat();
-    const uniqueItems = [];
-    const seenIds = new Set();
+    // 3. 聚合与去重 (核心逻辑)
+    const itemMap = new Map();
 
-    for (const item of allItems) {
-        if (!seenIds.has(item.id)) {
-            seenIds.add(item.id);
-            uniqueItems.push(item);
+    // 展平数组并遍历
+    for (const item of resultsArray.flat()) {
+        if (itemMap.has(item.id)) {
+            // 如果已存在，说明是多平台播出
+            const existingItem = itemMap.get(item.id);
+            // 避免重复拼接 (如: B站/B站)
+            if (!existingItem._platformSource.includes(item._platformSource)) {
+                existingItem._platformSource += `/${item._platformSource}`;
+            }
+        } else {
+            itemMap.set(item.id, item);
         }
     }
 
-    const label = dayTab === "today" ? "今日" : "明天";
+    // 转回数组
+    const uniqueItems = Array.from(itemMap.values());
+
+    // 4. 排序与文案处理
+    const label = dayTab === "today" ? "今日更新" : "明日预告";
+    
     if (uniqueItems.length === 0) {
         return [{ title: "暂无更新", subTitle: `${label}四大平台均无记录`, type: "text" }];
     }
 
-    // 4. 获取详细信息 (取热度前 30 防止请求爆炸)
-    const topItems = uniqueItems
-        .sort((a, b) => b.popularity - a.popularity)
-        .slice(0, 30);
+    // 按热度降序
+    uniqueItems.sort((a, b) => b.popularity - a.popularity);
 
-    const processedItems = await Promise.all(topItems.map(async (item) => {
-        try {
-            const detail = await Widget.tmdb.get(`/tv/${item.id}`, { 
-                params: { 
-                    language: "zh-CN",
-                    append_to_response: "next_episode_to_air,last_episode_to_air,networks"
-                } 
-            });
-
-            if (!detail) return null;
-
-            // 寻找匹配日期的集数
-            let targetEp = null;
-            if (detail.next_episode_to_air && detail.next_episode_to_air.air_date === dateStr) {
-                targetEp = detail.next_episode_to_air;
-            } else if (detail.last_episode_to_air && detail.last_episode_to_air.air_date === dateStr) {
-                targetEp = detail.last_episode_to_air;
-            }
-
-            if (!targetEp) return null;
-
-            const epStr = `S${String(targetEp.season_number).padStart(2,'0')}E${String(targetEp.episode_number).padStart(2,'0')}`;
-            
-            // 获取平台名
-            let platformName = "";
-            if (detail.networks) {
-                 const names = detail.networks
-                    .map(n => {
-                        const lowerName = n.name.toLowerCase();
-                        if (lowerName.includes("bilibili")) return "B站";
-                        if (lowerName.includes("tencent")) return "腾讯";
-                        if (lowerName.includes("iqiyi")) return "爱奇艺";
-                        if (lowerName.includes("youku")) return "优酷";
-                        return null;
-                    })
-                    .filter(n => n !== null); // 过滤掉非目标平台
-
-                // 去重（防止同一平台出现多次）并取前两个
-                const uniqueNames = [...new Set(names)];
-                if (uniqueNames.length > 0) platformName = uniqueNames.slice(0, 2).join("/");
-            }
-            if (!platformName) platformName = "全网";
-
-            return {
-                ...item,
-                _displayStr: `${label} · ${epStr}`, // 显示 "今日 · S02E10"
-                _platform: platformName,
-                vote_average: detail.vote_average
-            };
-
-        } catch(e) {
-            console.error(e);
-            return null;
-        }
-    }));
-
-    // 5. 最终返回
-    const finalItems = processedItems
-        .filter(i => i !== null)
-        .sort((a, b) => b.popularity - a.popularity);
-
-    if (finalItems.length === 0) {
-        return [{ title: "暂无详细数据", subTitle: "数据源可能尚未刷新", type: "text" }];
-    }
-
-    return finalItems.map(item => buildCard(item));
+    // 5. 构建卡片
+    return uniqueItems.map(item => {
+        // 给 buildCard 传递处理好的额外字段
+        item._displayStr = label; 
+        item._platform = item._platformSource;
+        return buildCard(item);
+    });
 
   } catch (e) {
     return [{ title: "请求失败", subTitle: String(e), type: "text" }];
   }
 }
 
+// 辅助函数：获取东八区 YYYY-MM-DD
+function getCNDateString(offsetDays = 0) {
+    const d = new Date();
+    // 转换到 UTC 时间
+    const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+    // 强制 +8 小时
+    const cnTime = new Date(utc + (3600000 * 8));
+    
+    if (offsetDays !== 0) {
+        cnTime.setDate(cnTime.getDate() + offsetDays);
+    }
+    return cnTime.toISOString().split("T")[0];
+}
+
+// 优化后的构建函数 (透传图片路径)
 function buildCard(item) {
     return {
         id: String(item.id),
@@ -181,10 +148,11 @@ function buildCard(item) {
         type: "tmdb",
         mediaType: "tv",
         title: item.name || item.original_name,
-        subTitle: item._displayStr,
-        genreTitle: item._platform,
+        subTitle: item._displayStr,  
+        genreTitle: item._platform,  
         description: item.overview || "暂无简介",
-        // 直接透传字段，让客户端自己处理
+        
+        // 直接透传字段，让客户端自动根据设备处理分辨率和域名
         backdropPath: item.backdrop_path, 
         posterPath: item.poster_path
     };
