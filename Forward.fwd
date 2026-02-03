@@ -49,6 +49,15 @@
       "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/traktlistpro.js"
     },
     {
+      "id": "zhuiju",
+      "title": "全网国漫·日程表",
+      "description": "聚合国内四大平台更新",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.3",
+      "author": "Jard1n",
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/zhuiju.js"
+    },
+    {
       "id": "forward.danmu.pro.online_dict",
       "title": "多源弹幕",
       "description": "支持添加多条api并自命名&繁简互转",
