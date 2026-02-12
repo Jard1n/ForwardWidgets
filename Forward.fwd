@@ -58,6 +58,15 @@
       "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/zhuiju.js"
     },
     {
+      "id": "fannju",
+      "title": "番剧·日程表",
+      "description": "专注 TMDB 每日与明日动漫更新",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.1",
+      "author": "Jard1n",
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/fanju.js"
+    },
+    {
       "id": "forward.danmu.pro.online_dict",
       "title": "多源弹幕",
       "description": "支持添加多条api并自命名&繁简互转",
