@@ -42,7 +42,7 @@ const GENRE_MAP = {
 function getGenreText(ids) {
     if (!ids || !Array.isArray(ids)) return "动画";
     const genres = ids.filter(id => id !== 16).map(id => GENRE_MAP[id]).filter(Boolean);
-    return genres.length > 0 ? genres.slice(0, 2).join(" / ") : "动画";
+    return genres.length > 0 ? genres[0] : "动画";
 }
 
 // 获取 YYYY-MM-DD 格式日期
