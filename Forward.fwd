@@ -49,6 +49,15 @@
       "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/traktlistpro.js"
     },
     {
+      "id": "cn_tv",
+      "title": "国剧综艺日历",
+      "description": "专注中国地区今日及明日的剧集、综艺更新聚合",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.1",
+      "author": "Jard1n",
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/cn_tv.js"
+    },
+    {
       "id": "zhuiju",
       "title": "全网国漫·日程表",
       "description": "聚合国内四大平台更新",
