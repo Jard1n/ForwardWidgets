@@ -1,0 +1,97 @@
+{
+  "title": "𝑱𝒂𝒓𝒅1𝒏'𝒔 𝑾𝒊𝒅𝒈𝒆𝒕𝒔",
+  "description": "𝐹𝑜𝑟𝑤𝑎𝑟𝑑 𝑊𝑖𝑑𝑔𝑒𝑡𝑠",
+  "icon": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/icon.png",
+  "widgets": [
+    {
+      "id": "javrate",
+      "title": "JAVRate",
+      "description": "获取 JAVRate 推荐数据",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.0",
+      "author": "Ti",
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/javrate.js"
+    },
+    {
+      "id": "javday",
+      "title": "JAVDay",
+      "description": "获取 JAVDay 推荐",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.1",
+      "author": "Ti",
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/javday.js"
+    },
+    {
+      "id": "jable",
+      "title": "Jable",
+      "description": "获取Jable全站视频",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.5",
+      "author": "nibiru",
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/jable.js"
+    },
+    {
+      "id": "Pornhub",
+      "title": "Pornhub",
+      "description": "在线观看Pornhub",
+      "requiredVersion": "1.0.2",
+      "version": "1.0.1",
+      "author": "海带",
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/Pornhub.js"
+    },
+    {
+      "id": "trakt",
+      "title": "Trak 追剧日历&个人中心",
+      "description": "追剧日历:显示你观看剧集最新集的 更新时间&Trakt 待看/收藏/历史",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.1",
+      "author": "Jard1n",
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/traktlistpro.js"
+    },
+    {
+      "id": "forward.doubantv",
+      "title": "豆瓣热门影视",
+      "description": "获取豆瓣时下热门电视剧与综艺",
+      "requiredVersion": "0.0.1",
+      "version": "1.1.0",
+      "author": "Jard1n",
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/doubantv.js"
+    },
+    {
+      "id": "zhuiju",
+      "title": "全网国漫·日程表",
+      "description": "聚合国内四大平台更新",
+      "requiredVersion": "0.0.1",
+      "version": "1.1.0",
+      "author": "Jard1n",
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/guoman.js"
+    },
+    {
+      "id": "fannju",
+      "title": "番剧·日程表",
+      "description": "专注 TMDB 每日与明日动漫更新",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.1",
+      "author": "Jard1n",
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/fanju.js"
+    },
+    {
+      "id": "forward.danmu.pro.online_dict",
+      "title": "多源弹幕",
+      "description": "支持添加多条api并自命名&繁简互转",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.8",
+      "author": "𝙈𝙖𝙠𝙠𝙖𝙋𝙖𝙠𝙠𝙖",
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/danmuapi-Pro.js"
+    },
+    {
+      "id": "forward.auto.danmu",
+      "title": "自动链接弹幕",
+      "description": "自动获取播放链接并从服务器获取弹幕",
+      "requiredVersion": "0.0.2",
+      "version": "1.0.0",
+      "author": "huangxd",
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/danmu_auto.js"
+    }
+  ]
+}
