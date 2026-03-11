@@ -41,12 +41,12 @@
     },
     {
       "id": "trakt",
-      "title": "Trak 追剧日历&个人中心",
-      "description": "追剧日历:显示你观看剧集最新集的 更新时间&Trakt 待看/收藏/历史",
+      "title": "Trak 个人中心",
+      "description": "显示个人观看剧集最新集的 更新时间&Trakt 待看/收藏/历史",
       "requiredVersion": "0.0.1",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "author": "Jard1n",
-      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/traktlistpro.js"
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/trakt.js"
     },
     {
       "id": "forward.doubantv",
