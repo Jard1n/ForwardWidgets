@@ -134,6 +134,9 @@ async function getCalendar(params) {
 async function getWatchlist(params) {
   const data = await fetchTraktData();
   if (data && data.watchlist) {
+    if (Array.isArray(data.watchlist)) {
+      return formatMediaData(data.watchlist, "待看", "default");
+    }
     const combined = [...(data.watchlist.shows || []), ...(data.watchlist.movies || [])];
     return formatMediaData(combined, "待看", "default");
   }
