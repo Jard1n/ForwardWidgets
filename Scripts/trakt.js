@@ -1,7 +1,7 @@
 WidgetMetadata = {
   id: "forward.trakt",
   title: "Trakt 影视追踪",
-  version: "1.1.1",
+  version: "1.1.0",
   requiredVersion: "0.0.1",
   description: "获取 Trakt 追剧日历、待看列表、收藏列表与观看历史",
   author: "Jard1n",
@@ -54,7 +54,7 @@ async function fetchTraktData() {
   return null;
 }
 
-// 【保留原版】提取并格式化为 YY-MM-DD 的辅助函数 (用于 genreTitle)
+// 提取并格式化为 YY-MM-DD 的辅助函数
 function formatShortDate(dateStr) {
   if (!dateStr) return "未知时间";
   const match = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/);
@@ -67,16 +67,6 @@ function formatShortDate(dateStr) {
   return dateStr;
 }
 
-// 【新增】提取并格式化为 YYYY-MM-DD 的辅助函数 (用于 subTitle)
-function formatFullDate(dateStr) {
-  if (!dateStr) return "未知时间";
-  const match = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/);
-  if (match) {
-    return `${match[1]}-${match[2]}-${match[3]}`; // 保留 4 位年份
-  }
-  return dateStr;
-}
-
 function formatMediaData(mediaList, defaultGenre, formatType = "default") {
   if (!mediaList || !Array.isArray(mediaList)) return [];
 
@@ -84,55 +74,46 @@ function formatMediaData(mediaList, defaultGenre, formatType = "default") {
   
   for (const item of mediaList) {
     const tmdb = item.tmdb_info || {};
-    const title = tmdb.title || item.title || "未知影视";
-    
-    // 获取原始时间字符串
-    const timeStrRaw = item.air_date || item.listed_at || item.collected_at || item.watched_at || tmdb.releaseDate || "";
-    
-    // --- 计算原来的显示格式 (用于 genreTitle) ---
-    let originalDisplayStr = "";
-    const shortDate = formatShortDate(timeStrRaw);
+    let displayStr = "";
+
     if (formatType === "history") {
+      // 观看历史：YY-MM-DD 已观看·S2E14
+      const watchedTime = formatShortDate(item.watched_at);
       let epInfo = "";
       if (item.season !== undefined && item.episode !== undefined) {
         epInfo = `S${item.season}E${item.episode}`;
       } else if (item.media_type === "movie" || item.type === "movie") {
         epInfo = "电影";
       }
-      originalDisplayStr = epInfo ? `${shortDate} 已观看·${epInfo}` : `${shortDate} 已观看`;
+      displayStr = epInfo ? `${watchedTime} 已观看·${epInfo}` : `${watchedTime} 已观看`;
+      
     } else {
+      // 其他（日历/待看/收藏）：YY-MM-DD·S2E14
+      const timeStrRaw = item.air_date || item.listed_at || item.collected_at || tmdb.releaseDate || "";
+      const shortDate = formatShortDate(timeStrRaw);
       let epInfo = "";
       if (item.season !== undefined && item.episode !== undefined) {
         epInfo = `S${item.season}E${item.episode}`;
       } else if (item.collected_episodes !== undefined) {
         epInfo = `已收藏${item.collected_episodes}集`;
       }
-      originalDisplayStr = epInfo ? `${shortDate}·${epInfo}` : shortDate;
-    }
-
-    // --- 计算新的显示格式 (用于 subTitle) ---
-    let newDisplayStr = "";
-    const fullDate = formatFullDate(timeStrRaw);
-    if (formatType === "history") {
-      newDisplayStr = `${fullDate} 已观看·${title}`;
-    } else {
-      newDisplayStr = `${fullDate}·${title}`;
+      displayStr = epInfo ? `${shortDate}·${epInfo}` : shortDate;
     }
 
     resultList.push({
       id: tmdb.id || item.tmdb_id || item.trakt_id || Math.random().toString(36).substring(2, 9),
       type: "tmdb",
-      title: title,
+      title: tmdb.title || item.title || "未知影视",
       originalTitle: tmdb.originalTitle || item.original_title || "",
       description: tmdb.description || "暂无简介",
-      // 此处置空可以避免 App 自动拼接额外的前缀年份
+      // 如果取消客户端前面自动带上的年份前缀，可将下面这行改为： releaseDate: "",
       releaseDate: "",
       backdropPath: tmdb.backdropPath || "",
       posterPath: tmdb.posterPath || "",
       rating: tmdb.rating || 0,
       mediaType: tmdb.mediaType || (item.media_type === "movie" ? "movie" : "tv"),
-      genreTitle: originalDisplayStr,  // 保持原样：YY-MM-DD·SxEyy
-      subTitle: newDisplayStr,         // 采用新版：YYYY-MM-DD·剧名
+      genreTitle: displayStr,  // 左下角角标显示 (YY-MM-DD·SxEyy)
+      subTitle: displayStr,    // 副标题显示
       tmdbInfo: tmdb,
       popularity: tmdb.popularity || 0,
       isNew: true
