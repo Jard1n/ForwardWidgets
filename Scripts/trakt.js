@@ -107,13 +107,13 @@ function formatMediaData(mediaList, defaultGenre, formatType = "default") {
       originalTitle: tmdb.originalTitle || item.original_title || "",
       description: tmdb.description || "暂无简介",
       // 如果取消客户端前面自动带上的年份前缀，可将下面这行改为： releaseDate: "",
-      releaseDate: "",
+      // releaseDate: "",
       backdropPath: tmdb.backdropPath || "",
       posterPath: tmdb.posterPath || "",
       rating: tmdb.rating || 0,
       mediaType: tmdb.mediaType || (item.media_type === "movie" ? "movie" : "tv"),
       genreTitle: displayStr,  // 左下角角标显示 (YY-MM-DD·SxEyy)
-      subTitle: displayStr,    // 副标题显示
+      // subTitle: displayStr,    // 副标题显示
       tmdbInfo: tmdb,
       popularity: tmdb.popularity || 0,
       isNew: true
