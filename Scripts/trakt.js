@@ -1,7 +1,7 @@
 WidgetMetadata = {
   id: "forward.trakt",
   title: "Trakt 影视追踪",
-  version: "1.1.0",
+  version: "1.1.1",
   requiredVersion: "0.0.1",
   description: "获取 Trakt 追剧日历、待看列表、收藏列表与观看历史",
   author: "Jard1n",
@@ -54,7 +54,7 @@ async function fetchTraktData() {
   return null;
 }
 
-// 提取并格式化为 YY-MM-DD 的辅助函数
+// 【保留原版】提取并格式化为 YY-MM-DD 的辅助函数 (用于 genreTitle)
 function formatShortDate(dateStr) {
   if (!dateStr) return "未知时间";
   const match = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/);
@@ -63,6 +63,16 @@ function formatShortDate(dateStr) {
     const month = match[2];          // 03
     const day = match[3];            // 11
     return `${year}-${month}-${day}`;
+  }
+  return dateStr;
+}
+
+// 【新增】提取并格式化为 YYYY-MM-DD 的辅助函数 (用于 subTitle)
+function formatFullDate(dateStr) {
+  if (!dateStr) return "未知时间";
+  const match = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    return `${match[1]}-${match[2]}-${match[3]}`; // 保留 4 位年份
   }
   return dateStr;
 }
