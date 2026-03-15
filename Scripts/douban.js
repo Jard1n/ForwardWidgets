@@ -66,7 +66,7 @@ async function fetchDoubanData() {
       return doubanDataCache;
     }
   } catch (error) {
-    console.error("获取豆瓣数据失败:"， error.message);
+    console.error("获取豆瓣数据失败:", error.message);
   }
   return null;
 }
@@ -76,10 +76,10 @@ function formatDoubanData(mediaList) {
   if (!mediaList || !Array.isArray(mediaList)) return [];
 
   let resultList = [];
-  
+  
   for (const item of mediaList) {
     const tmdb = item.tmdb_info || {};
-    
+    
     // 从 douban_subtitle 提取剧情标签 (例: 2026 / 中国大陆 / 剧情 爱情 古装 / ...)
     let genres = "";
     if (item.douban_subtitle) {
@@ -94,7 +94,7 @@ function formatDoubanData(mediaList) {
       }
     }
     const displayGenre = genres || "暂无标签";
-    
+    
     resultList.push({
       id: tmdb.id,
       type: tmdb.type,
