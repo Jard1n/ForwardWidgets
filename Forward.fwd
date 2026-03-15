@@ -49,15 +49,6 @@
       "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/trakt.js"
     },
     {
-      "id": "douban",
-      "title": "豆瓣影视榜单",
-      "description": "获取豆瓣各类影视榜单",
-      "requiredVersion": "0.0.1",
-      "version": "1.1.0",
-      "author": "Jard1n",
-      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/douban.js"
-    },
-    {
       "id": "zhuiju",
       "title": "全网国漫·日程表",
       "description": "聚合国内四大平台更新",
