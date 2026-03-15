@@ -1,7 +1,7 @@
 WidgetMetadata = {
-  id: "forward.douban",
+  id: "douban",
   title: "豆瓣影视榜单",
-  version: "1.0.0",
+  version: "1.1.0",
   requiredVersion: "0.0.1",
   description: "获取豆瓣各类影视榜单",
   author: "Jard1n",
