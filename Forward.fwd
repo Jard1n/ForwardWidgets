@@ -49,11 +49,11 @@
       "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/trakt.js"
     },
     {
-      "id": "forward.douban1",
+      "id": "douban",
       "title": "豆瓣影视榜单",
       "description": "获取豆瓣各类影视榜单",
       "requiredVersion": "0.0.1",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": "Jard1n",
       "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/douban.js"
     },
