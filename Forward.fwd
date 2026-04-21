@@ -68,12 +68,12 @@
     },
     {
       "id": "fannju",
-      "title": "番剧·日程表",
-      "description": "专注 TMDB 每日与明日动漫更新",
+      "title": "Bangumi追番日历",
+      "description": "Bangumi 每日更新番剧列表",
       "requiredVersion": "0.0.1",
-      "version": "1.0.1",
+      "version": "1.0.0",
       "author": "Jard1n",
-      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/fanju.js"
+      "url": "https://raw.githubusercontent.com/Jard1n/ForwardWidgets/main/Scripts/bangumi.js"
     },
     {
       "id": "forward.danmu.pro.online_dict",
