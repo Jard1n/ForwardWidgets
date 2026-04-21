@@ -18,7 +18,7 @@ WidgetMetadata = {
           type: "enumeration",
           value: "today",
           enumOptions: [
-            { title: "📅 今日更新", value: "today" },
+            { title: "今日更新", value: "today" },
             { title: "星期一", value: "1" },
             { title: "星期二", value: "2" },
             { title: "星期三", value: "3" },
