@@ -13,7 +13,7 @@ WidgetMetadata = {
       functionName: "loadBangumiCalendar",
       params: [
         {
-          name: "weekday",
+          name: "sort_by",
           title: "选择日期",
           type: "enumeration",
           value: "today",
@@ -107,16 +107,17 @@ async function loadBangumiCalendar(params) {
   const data = await fetchScheduleData();
   if (!data || !data.calendar) return [];
 
-  const weekdayParam = params.weekday || "today";
+  // 现已直接使用 sort_by 来作为日期选择的参数
+  const sortByParam = params.sort_by || "today";
   let targetDayStr = "";
 
   // 如果选择 today，计算当前星期
-  if (weekdayParam === "today") {
+  if (sortByParam === "today") {
     let currentDayNum = new Date().getDay(); // 0(周日) - 6(周六)
     if (currentDayNum === 0) currentDayNum = 7;
     targetDayStr = dayMap[currentDayNum];
   } else {
-    targetDayStr = dayMap[parseInt(weekdayParam)];
+    targetDayStr = dayMap[parseInt(sortByParam)];
   }
 
   console.log(`当前需要获取的数据为: ${targetDayStr}`);
