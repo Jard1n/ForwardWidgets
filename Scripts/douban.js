@@ -1,7 +1,7 @@
 WidgetMetadata = {
   id: "douban",
   title: "豆瓣影视榜单",
-  version: "1.1.0",
+  version: "1.2.0",
   requiredVersion: "0.0.1",
   description: "获取豆瓣各类影视榜单",
   author: "Jard1n",
@@ -80,7 +80,7 @@ function formatDoubanData(mediaList) {
   for (const item of mediaList) {
     const tmdb = item.tmdb_info || {};
     
-    // 从 douban_subtitle 提取剧情标签 (例: 2026 / 中国大陆 / 剧情 爱情 古装 / ...)
+    // 1. 从 douban_subtitle 提取剧情标签 (例: 2026 / 中国大陆 / 剧情 爱情 古装 / ...)
     let genres = "";
     if (item.douban_subtitle) {
       const parts = item.douban_subtitle.split(" / ");
@@ -95,22 +95,32 @@ function formatDoubanData(mediaList) {
     }
     const displayGenre = genres || "暂无标签";
     
+    // 2. 提取年份
+    const rawDate = tmdb.releaseDate || item.year || "";
+    // 将日期字符串以 '-' 分割取第一部分就是年份
+    const year = rawDate ? String(rawDate).split('-')[0] : "";
+    
+    // 3. 拼接副标题文本 (例如 "2023 · 剧情 爱情")
+    const displaySubtitle = year ? `${year} · ${displayGenre}` : displayGenre;
+    
     resultList.push({
-      id: tmdb.id,
-      type: tmdb.type,
+      id: tmdb.id || Math.random().toString(36).substring(2, 9),
+      type: tmdb.type || "tmdb",
+      mediaType: tmdb.mediaType || "tv",
       title: item.title,
-      originalTitle: tmdb.originalTitle || item.title || "",
       description: tmdb.description || item.douban_subtitle || "暂无简介",
-      releaseDate: tmdb.releaseDate || item.year || "",
+      
+      // 👇 将拼接好的文本赋给 releaseDate，在卡片副标题行显示
+      releaseDate: displaySubtitle, 
+      
       backdropPath: tmdb.backdropPath || "",
       posterPath: tmdb.posterPath || "",
       rating: tmdb.rating || item.douban_rating || 0,
-      mediaType: tmdb.mediaType || "tv",
-      genreTitle: displayGenre,
-      subTitle: item.year || tmdb.tmdb_year || "",
-      tmdbInfo: tmdb,
+      
+      // 👇 使用规范的 genreItems 来传递分类/标签属性
+      genreItems: [{ id: displayGenre, title: displayGenre }],
+      
       popularity: tmdb.popularity || 0,
-      isNew: true
     });
   }
 
