@@ -1,7 +1,7 @@
 WidgetMetadata = {
   id: "bangumi",
   title: "Bangumi 追番日历",
-  version: "1.0.0",
+  version: "1.1.0",
   requiredVersion: "0.0.1",
   description: "获取 Bangumi 每日更新番剧列表",
   author: "Jard1n",
@@ -63,21 +63,34 @@ function formatBangumiData(items, dayStr) {
   for (const anime of items) {
     const tmdb = anime.tmdb_info || {};
     
+    // 1. 获取原始日期并截取年份 (例如 "2023")
+    const rawDate = tmdb.releaseDate || "";
+    const year = rawDate.split('-')[0];
+    
+    // 2. 获取标签 (如果 tmdb 中没有 genre，则使用传入的 dayStr 如"星期一"兜底)
+    const genreText = tmdb.genre || dayStr;
+    
+    // 3. 拼接副标题文本 (例如 "2023 · 动画")
+    const displaySubtitle = year ? `${year} · ${genreText}` : genreText;
+    
     resultList.push({
-      id: tmdb.id,
-      type: tmdb.type,
+      id: tmdb.id || Math.random().toString(36).substring(2, 9),
+      type: tmdb.type || "tmdb",
+      mediaType: "tv",
       title: anime.title || tmdb.title,
-      originalTitle: anime.original_title || tmdb.original_title || anime.title,
       description: tmdb.description || "暂无简介",
-      releaseDate: tmdb.releaseDate || "",
+      
+      // 👇 将拼接好的文本赋给 releaseDate，在卡片副标题行显示
+      releaseDate: displaySubtitle, 
+      
       backdropPath: tmdb.backdropPath || "",
       posterPath: tmdb.posterPath || "",
       rating: anime.bgm_score || tmdb.rating || 0,
-      mediaType: "tv",
-      genreTitle: tmdb.genre || dayStr,
-      tmdbInfo: tmdb,
+      
+      // 👇 使用规范的 genreItems 来传递分类/标签属性
+      genreItems: [{ id: genreText, title: genreText }],
+      
       popularity: tmdb.popularity || 0,
-      isNew: true
     });
   }
 
