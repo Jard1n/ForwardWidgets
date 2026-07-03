@@ -1,7 +1,7 @@
 WidgetMetadata = {
   id: "forward.animeschedule",
   title: "国漫日程表",
-  version: "1.1.0",
+  version: "1.2.0",
   requiredVersion: "0.0.1",
   description: "获取国内四大平台今日与明日的动漫更新日程",
   author: "Jard1n",
@@ -67,21 +67,27 @@ function formatAnimeData(dayData) {
     for (const anime of animeList) {
       const tmdb = anime.tmdb_info || {};
       
+      // 1. 获取原始日期字符串 (例如 "2023-06-24")
+      const rawDate = tmdb.releaseDate || dayData.date || "";
+      // 2. 截取年份 (例如 "2023")
+      const year = rawDate.split('-')[0]; 
+      // 3. 拼接为最终显示的副标题 (例如 "2023 · 腾讯视频")
+      const displaySubtitle = year ? `${year} · ${platform.name}` : platform.name;
+      
       resultList.push({
         id: tmdb.id || Math.random().toString(36).substring(2, 9),
         type: "tmdb",
+        mediaType: "tv",
         title: tmdb.title || anime.title,
-        originalTitle: tmdb.title || anime.title,
         description: tmdb.description || "暂无简介",
-        releaseDate: tmdb.releaseDate || dayData.date,
+        // 将拼接好的文本赋给 releaseDate，这样标题下方就会显示 "2023 · 腾讯视频"
+        releaseDate: displaySubtitle,        
         backdropPath: tmdb.backdropPath || "",
         posterPath: tmdb.posterPath || "",
-        rating: tmdb.rating || 0,
-        mediaType: "tv",
-        genreTitle: platform.name, // 左下角标签显示所在的视频平台
-        tmdbInfo: tmdb,
+        rating: tmdb.rating || 0,     
+        // 保持标准的分类跳转能力
+        genreItems: [{ id: platform.key, title: platform.name }],
         popularity: tmdb.popularity || 0,
-        isNew: true
       });
     }
   }
