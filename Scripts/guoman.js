@@ -1,7 +1,7 @@
 WidgetMetadata = {
   id: "forward.animeschedule",
   title: "国漫日程表",
-  version: "1.2.0",
+  version: "1.2.3",
   requiredVersion: "0.0.1",
   description: "获取国内四大平台今日与明日的动漫更新日程",
   author: "Jard1n",
@@ -26,7 +26,7 @@ WidgetMetadata = {
   ],
 };
 
-// 获取你 Gist 上的最新 JSON 数据
+// 获取 Gist 上的最新 JSON 数据
 const DATA_URL = "https://gist.githubusercontent.com/Jard1n/0c7ea2fcede896a7af690b9a54487aa8/raw/tencent_anime.json";
 
 // 基础获取数据方法
@@ -36,7 +36,6 @@ async function fetchScheduleData() {
     const response = await Widget.http.get(DATA_URL);
     
     if (response && response.data) {
-      // 兼容处理：有时 Gist 返回的是字符串，需要 parse
       const jsonData = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
       console.log(`动漫数据获取成功，数据更新时间: ${jsonData.update_time}`);
       return jsonData;
@@ -47,18 +46,20 @@ async function fetchScheduleData() {
   return null;
 }
 
-// 格式化动漫排播数据
+// 格式化动漫排播数据（包含去重与多平台合并）
 function formatAnimeData(dayData) {
   if (!dayData) return [];
 
+  // 将平台名称做简化配置
   const platforms = [
-    { key: 'tencent', name: '腾讯视频' },
-    { key: 'bilibili', name: '哔哩哔哩' },
+    { key: 'tencent', name: '腾讯' },
+    { key: 'bilibili', name: 'B站' },
     { key: 'iqiyi', name: '爱奇艺' },
-    { key: 'youku', name: '优酷视频' }
+    { key: 'youku', name: '优酷' }
   ];
   
-  let resultList = [];
+  // 使用 Map 进行去重，Key 为 tmdb.id 或 清理后的标题
+  const animeMap = new Map();
   
   // 遍历四个平台的数据
   for (const platform of platforms) {
@@ -67,38 +68,68 @@ function formatAnimeData(dayData) {
     for (const anime of animeList) {
       const tmdb = anime.tmdb_info || {};
       
-      // 1. 获取原始日期字符串 (例如 "2023-06-24")
-      const rawDate = tmdb.releaseDate || dayData.date || "";
-      // 2. 截取年份 (例如 "2023")
-      const year = rawDate.split('-')[0]; 
-      // 3. 拼接为最终显示的副标题 (例如 "2023 · 腾讯视频")
-      const displaySubtitle = year ? `${year} · ${platform.name}` : platform.name;
-      
-      resultList.push({
-        id: tmdb.id || Math.random().toString(36).substring(2, 9),
-        type: "tmdb",
-        mediaType: "tv",
-        title: tmdb.title || anime.title,
-        description: tmdb.description || "暂无简介",
-        // 将拼接好的文本赋给 releaseDate，这样标题下方就会显示 "2023 · 腾讯视频"
-        releaseDate: displaySubtitle,        
-        backdropPath: tmdb.backdropPath || "",
-        posterPath: tmdb.posterPath || "",
-        rating: tmdb.rating || 0,     
-        // 保持标准的分类跳转能力
-        genreItems: [{ id: platform.key, title: platform.name }],
-        popularity: tmdb.popularity || 0,
-      });
+      // 优先使用 tmdb.id 去重，没有则使用 title 去重（去除首尾空格）
+      const uniqueKey = tmdb.id ? `tmdb_${tmdb.id}` : `title_${(anime.title || "").trim()}`;
+
+      if (animeMap.has(uniqueKey)) {
+        // 如果已存在，合并平台简称
+        const existingItem = animeMap.get(uniqueKey);
+        if (!existingItem.platformNames.includes(platform.name)) {
+          existingItem.platformNames.push(platform.name);
+          existingItem.genreItems.push({ id: platform.key, title: platform.name });
+        }
+      } else {
+        // 如果不存在，记录下来
+        const rawDate = tmdb.releaseDate || dayData.date || "";
+        const year = rawDate ? rawDate.split('-')[0] : "";
+
+        animeMap.set(uniqueKey, {
+          id: tmdb.id || Math.random().toString(36).substring(2, 9),
+          type: "tmdb",
+          mediaType: "tv",
+          title: tmdb.title || anime.title,
+          description: tmdb.description || "暂无简介",
+          year: year,
+          platformNames: [platform.name], // 存储简短名称数组
+          backdropPath: tmdb.backdropPath || "",
+          posterPath: tmdb.posterPath || "",
+          rating: tmdb.rating || 0,     
+          genreItems: [{ id: platform.key, title: platform.name }],
+          popularity: tmdb.popularity || 0,
+        });
+      }
     }
   }
 
-  // 过滤掉没有成功获取到 TMDB 海报的项，以免在组件中显示黑屏
+  // 整理数据结构，组装最终副标题
+  let resultList = Array.from(animeMap.values()).map(item => {
+    // 拼接成 "腾讯 / B站" 格式
+    const platformsStr = item.platformNames.join(' / ');
+    // 最终副标题格式，例如："2023 · 腾讯 / B站"
+    const displaySubtitle = item.year ? `${item.year} · ${platformsStr}` : platformsStr;
+    
+    return {
+      id: item.id,
+      type: item.type,
+      mediaType: item.mediaType,
+      title: item.title,
+      description: item.description,
+      releaseDate: displaySubtitle, 
+      backdropPath: item.backdropPath,
+      posterPath: item.posterPath,
+      rating: item.rating,
+      genreItems: item.genreItems,
+      popularity: item.popularity,
+    };
+  });
+
+  // 过滤掉没有海报的项
   let validList = resultList.filter(item => item.posterPath);
   
-  // 按热度 (popularity) 降序排序，热度高的排在前面
+  // 按热度降序排序
   validList.sort((a, b) => b.popularity - a.popularity);
   
-  console.log(`格式化完成，共包含 ${validList.length} 部带有海报的动漫`);
+  console.log(`格式化完成，去重后共包含 ${validList.length} 部动漫`);
   return validList;
 }
 
